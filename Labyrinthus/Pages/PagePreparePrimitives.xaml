@@ -1,0 +1,23 @@
+﻿<Page x:Class="Labyrinthus.Pages.PagePreparePrimitives"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:AidedCanvas="clr-namespace:Labyrinthus.AidedCanvas"
+    Title="Установка размеров" ShowsNavigationUI="False" KeepAlive="True">
+    <DockPanel LastChildFill="True">   
+        <StackPanel DockPanel.Dock="Right">       
+            <Label Margin="0,2,0,0" HorizontalAlignment="Center">Ширина примитива</Label>
+            <TextBox Name="PrimitiveWidth" Margin="2" TextChanged="Primitive_TextChanged"></TextBox>    
+            <Label Margin="0,2,0,0" HorizontalAlignment="Center">Высота примитива</Label>
+            <TextBox Name="PrimitiveHeight" Margin="2" TextChanged="Primitive_TextChanged"></TextBox>
+            <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SavePrimitive">Сохранить</Button>
+            <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="LoadPrimitive">Загрузить</Button>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Left" Name="StackPrimitives">
+            <Viewbox Name="ViewPrimitives">
+                <AidedCanvas:PrimitiveCanvas x:Name="PrimitiveCanvas" Width="200" Height="200">           
+                </AidedCanvas:PrimitiveCanvas>
+            </Viewbox>
+        </StackPanel>
+    </DockPanel>
+
+</Page>
