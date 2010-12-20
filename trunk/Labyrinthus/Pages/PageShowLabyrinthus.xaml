@@ -1,0 +1,31 @@
+﻿<Page x:Class="Labyrinthus.Pages.PageShowLabyrinthus"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="PageShowLabyrinthus" ShowsNavigationUI="False" KeepAlive="True" Loaded="Page_Loaded">
+    <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Right">
+            <Label Margin="0,2,0,0" HorizontalAlignment="Center">Масштаб (пиксели)</Label>
+            <TextBox Name="PrimitiveZoom" TextChanged="PrimitiveZoom_TextChanged">10</TextBox>
+            <Label Margin="0,2,0,0" HorizontalAlignment="Center" MouseDown="FloorColorLabelClick">Цвет пола</Label>
+            <Popup Name="FloorColorPopup" StaysOpen="True" Placement="Mouse" 
+                   MaxWidth="200" PopupAnimation="Slide" AllowsTransparency="True">
+                <Border BorderBrush="Beige" BorderThickness="2" Background="White">
+                    <TextBlock>Test floor popup</TextBlock>
+                </Border>
+            </Popup>
+            <Label Margin="0,2,0,0" HorizontalAlignment="Center">Цвет стен</Label>
+            <DockPanel>
+                <Label>Высота</Label>
+                <TextBox Name="PicHeight" TextChanged="PicHeight_TextChanged">600</TextBox>
+            </DockPanel>
+            <DockPanel>
+                <Label>Ширина</Label>
+                <TextBox Name="PicWidth" TextChanged="PicWidth_TextChanged">800</TextBox>
+            </DockPanel>
+            <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SaveLabyrinthus">Сохранить</Button>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Left">
+            <Image Name="LabyrinthusImage" HorizontalAlignment="Left" VerticalAlignment="Stretch"></Image>
+        </StackPanel>
+    </DockPanel>
+</Page>
