@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace Labyrinthus.Pages
 {
-  /// <summary>
-  /// Interaction logic for PagePreparePrimitives.xaml
-  /// </summary>
   public partial class PagePreparePrimitives
   {
-
-
     #region Конструктор
 
     public PagePreparePrimitives()
@@ -25,12 +20,46 @@ namespace Labyrinthus.Pages
 
     private void LoadPrimitive(object sender, RoutedEventArgs e)
     {
-      MessageBox.Show("Тут будет загрузка примитива из файла");
+      var wnd = (WindowMaster)Window.GetWindow(this);
+      if (wnd != null)
+      {
+        var dlg = new OpenFileDialog
+        {
+          DefaultExt = ".pmv",
+          Filter = "Примитивы (.pmv)|*.pmv"
+        };
+
+        var result = dlg.ShowDialog();
+
+        if (result == true)
+        {
+          wnd.Primitive.Deserialize(dlg.FileName);
+          PrimitiveWidth.Text = wnd.Primitive.Width.ToString();
+          PrimitiveHeight.Text = wnd.Primitive.Height.ToString();
+          PrimitiveCanvas.Refresh();
+        }
+      }
     }
 
     private void SavePrimitive(object sender, RoutedEventArgs e)
     {
-      MessageBox.Show("Тут будет сохранение примитива в файл");
+      var wnd = (WindowMaster)Window.GetWindow(this);
+      if (wnd != null)
+      {
+        var dlg = new SaveFileDialog
+        {
+          FileName = "Примитив",
+          DefaultExt = ".pmv",
+          Filter = "Примитивы (.pmv)|*.pmv"
+        };
+
+        var result = dlg.ShowDialog();
+
+        if (result == true)
+        {
+          wnd.Primitive.Serialize(dlg.FileName);
+        }
+      }
     }
 
     #endregion

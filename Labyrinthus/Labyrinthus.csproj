@@ -85,8 +85,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AidedCanvas\LineInfo.cs" />
     <Compile Include="AidedCanvas\PrimitiveCanvas.cs" />
+    <Compile Include="Objects\LineInfo.cs" />
+    <Compile Include="Objects\PrimitiveInfo.cs" />
     <Compile Include="Pages\PagePreparePrimitives.xaml.cs">
       <DependentUpon>PagePreparePrimitives.xaml</DependentUpon>
     </Compile>
