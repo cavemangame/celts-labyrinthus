@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Navigation;
-using Labyrinthus.AidedCanvas;
+using Labyrinthus.Objects;
 using Labyrinthus.Pages;
 
 namespace Labyrinthus
@@ -15,10 +15,7 @@ namespace Labyrinthus
   public partial class WindowMaster : Window
   {
     private int CurrentPageNumber = 0;
-    public int PrimitiveWidth = 0;
-    public int PrimitiveHeight = 0;
-    public List<LineInfo> info = new List<LineInfo>();
-
+    public PrimitiveInfo Primitive = new PrimitiveInfo();
 
     public WindowMaster()
     {
@@ -60,15 +57,6 @@ namespace Labyrinthus
       {
         case 0:
           CurrentPageNumber = 1;
-
-          var oldPage = FramePages.NavigationService.Content as PagePreparePrimitives;
-          if (oldPage != null)
-          {
-            PrimitiveWidth = oldPage.PrimitiveCanvas.PrimitiveWidth;
-            PrimitiveHeight = oldPage.PrimitiveCanvas.PrimitiveHeight;
-            info = oldPage.PrimitiveCanvas.Primitive;
-          }
-
           if (FramePages.CanGoForward)
           {
             FramePages.GoForward();
