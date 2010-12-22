@@ -95,7 +95,9 @@ namespace Labyrinthus.Pages
 
         var drawingVisual = new DrawingVisual();
 
-        using (DrawingContext dc = drawingVisual.RenderOpen())
+        DrawingContext dc = drawingVisual.RenderOpen();
+        
+        //using (DrawingContext dc = drawingVisual.RenderOpen())
         {
           dc.DrawRectangle(floorBrush, primitiveBorderPen, new Rect(0, 0, picWidth, picHeight));
           // рисуем
@@ -107,6 +109,7 @@ namespace Labyrinthus.Pages
             }
           }
         }
+        dc.Close();
 
         var bmp = new RenderTargetBitmap(picWidth, picHeight, 96, 96, PixelFormats.Pbgra32);
         bmp.Render(drawingVisual);
@@ -116,12 +119,19 @@ namespace Labyrinthus.Pages
 
     private void DrawPrimitive(WindowMaster wnd, int i, int j, double zoom, DrawingContext dc)
     {
-      foreach (var lineInfo in wnd.Primitive.Lines)
+      var geo = new StreamGeometry();
+      using (var geoContext = geo.Open())
       {
-        dc.DrawLine(primitiveBorderPen,
-                    new Point((lineInfo.X0 + wnd.Primitive.Width * i) * zoom, (lineInfo.Y0 + wnd.Primitive.Height * j) * zoom),
-                    new Point((lineInfo.X1 + wnd.Primitive.Width * i) * zoom, (lineInfo.Y1 + wnd.Primitive.Height * j) * zoom));
+        foreach (var lineInfo in wnd.Primitive.Lines)
+        {
+          geoContext.BeginFigure(
+             new Point((lineInfo.X0 + wnd.Primitive.Width * i) * zoom, (lineInfo.Y0 + wnd.Primitive.Height * j) * zoom), false, false);
+          geoContext.LineTo(
+            new Point((lineInfo.X1 + wnd.Primitive.Width * i) * zoom, (lineInfo.Y1 + wnd.Primitive.Height * j) * zoom), true, false);     
+        }
       }
+
+      dc.DrawGeometry(primitiveBorderBrush, primitiveBorderPen, geo);
     }
 
     #endregion
