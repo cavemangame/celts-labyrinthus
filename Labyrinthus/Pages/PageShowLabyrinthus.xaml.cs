@@ -72,7 +72,7 @@ namespace Labyrinthus.Pages
       {
         return;
       }
-      var wnd = (WindowMaster) Window.GetWindow(this);
+      var wnd = (WindowMaster)Window.GetWindow(this);
       if (wnd != null)
       {
         if (wnd.Primitive.Width <= 0 || wnd.Primitive.Height <= 0)
@@ -90,24 +90,30 @@ namespace Labyrinthus.Pages
         LabyrinthusImage.Height = picHeight;
 
         // определяем количество примитивов по высоте и ширине рисунка
-        var hCount = (int) (picHeight / (zoom * wnd.Primitive.Height));
-        var wCount = (int) (picWidth / (zoom * wnd.Primitive.Width));
+        var hCount = (int)(picHeight / (zoom * wnd.Primitive.Height));
+        var wCount = (int)(picWidth / (zoom * wnd.Primitive.Width));
 
         var drawingVisual = new DrawingVisual();
 
         DrawingContext dc = drawingVisual.RenderOpen();
-        
-        //using (DrawingContext dc = drawingVisual.RenderOpen())
+
+        // фон
+        dc.DrawRectangle(floorBrush, null, new Rect(0, 0, picWidth, picHeight));
+
+        // рисуем стены
+        for (int i = 0; i <= wCount; i++)
         {
-          dc.DrawRectangle(floorBrush, primitiveBorderPen, new Rect(0, 0, picWidth, picHeight));
-          // рисуем
-          for (int i = 0; i <= wCount; i++)
+          // на каждый примитив - медленней, на всё - медленней
+          var geo = new StreamGeometry();
+          using (var geoContext = geo.Open())
           {
             for (int j = 0; j <= hCount; j++)
             {
-              DrawPrimitive(wnd, i, j, zoom, dc);
+              DrawPrimitive(wnd, i, j, zoom, geoContext);
             }
           }
+          dc.DrawGeometry(primitiveBorderBrush, primitiveBorderPen, geo);
+
         }
         dc.Close();
 
@@ -117,21 +123,17 @@ namespace Labyrinthus.Pages
       }
     }
 
-    private void DrawPrimitive(WindowMaster wnd, int i, int j, double zoom, DrawingContext dc)
+    private void DrawPrimitive(WindowMaster wnd, int i, int j, double zoom, StreamGeometryContext geoContext)
     {
-      var geo = new StreamGeometry();
-      using (var geoContext = geo.Open())
+      foreach (var lineInfo in wnd.Primitive.Lines)
       {
-        foreach (var lineInfo in wnd.Primitive.Lines)
-        {
-          geoContext.BeginFigure(
-             new Point((lineInfo.X0 + wnd.Primitive.Width * i) * zoom, (lineInfo.Y0 + wnd.Primitive.Height * j) * zoom), false, false);
-          geoContext.LineTo(
-            new Point((lineInfo.X1 + wnd.Primitive.Width * i) * zoom, (lineInfo.Y1 + wnd.Primitive.Height * j) * zoom), true, false);     
-        }
+        geoContext.BeginFigure(
+          new Point((lineInfo.X0 + wnd.Primitive.Width*i)*zoom, (lineInfo.Y0 + wnd.Primitive.Height*j)*zoom), false,
+          false);
+        geoContext.LineTo(
+          new Point((lineInfo.X1 + wnd.Primitive.Width*i)*zoom, (lineInfo.Y1 + wnd.Primitive.Height*j)*zoom), true,
+          false);
       }
-
-      dc.DrawGeometry(primitiveBorderBrush, primitiveBorderPen, geo);
     }
 
     #endregion
