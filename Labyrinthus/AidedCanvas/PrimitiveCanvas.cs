@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -100,10 +101,12 @@ namespace Labyrinthus.AidedCanvas
     
     #endregion
 
+    #region Обработка событий
     protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
     {
       TrySetUserPrimitiveAction(e.GetPosition(this));
     }
+    #endregion
 
     #region Отрисовка
     /// <summary>
@@ -147,78 +150,71 @@ namespace Labyrinthus.AidedCanvas
       }
     }
 
+    private LineInfo GetPointedLine(Point pos)
+    {
+      var wnd = (WindowMaster)Window.GetWindow(this);
+
+      if (null == wnd)
+      {
+        return null;
+      }
+
+      var primitiveInfo = wnd.Primitive;
+      int cells = Math.Max(primitiveInfo.Height, primitiveInfo.Width);
+      double step = Math.Min((ActualHeight - 2 * shiftFromBorder) / cells,
+                             (ActualWidth - 2 * shiftFromBorder) / cells);
+
+      for (int i = 0; i <= primitiveInfo.Width; i++)
+      {
+        for (int j = 0; j < primitiveInfo.Height; j++)
+        {
+          var vertHitRect = new Rect(i * step + shiftFromBorder - 2, j * step + shiftFromBorder + 2, 4, step - 4);
+
+          if (vertHitRect.Contains(pos))
+          {
+            return new LineInfo(i, j, i, j + 1);
+          }
+
+          var horHitRect = new Rect(i * step + shiftFromBorder + 2, j * step + shiftFromBorder - 2, step - 4, 4);
+
+          if (horHitRect.Contains(pos))
+          {
+            return new LineInfo(i, j, i + 1, j);
+          }
+        }
+      }
+      return null;
+    }
+
     private void TrySetUserPrimitiveAction(Point pos)
     {
       var wnd = (WindowMaster)Window.GetWindow(this);
-      if (wnd != null)
+
+      if (null == wnd)
       {
-        int cells = Math.Max(wnd.Primitive.Height, wnd.Primitive.Width);
-        double step = Math.Min((ActualHeight - 2 * shiftFromBorder) / cells,
-                               (ActualWidth - 2 * shiftFromBorder) / cells);
-
-        // вертикальные
-        for (int i = 0; i <= wnd.Primitive.Width; i++)
-        {
-          for (int j = 0; j < wnd.Primitive.Height; j++)
-          {
-            var hitRect = new Rect(i * step + shiftFromBorder - 2, j * step + shiftFromBorder + 2, 4, step - 4);
-            if (hitRect.Contains(pos))
-            {
-              var hitLine = new LineInfo(i, j, i, j + 1);
-              bool hasThisLine = false;
-              foreach (var lineInfo in wnd.Primitive.Lines)
-              {
-                if (hitLine == lineInfo)
-                {
-                  hasThisLine = true;
-                  break;
-                }
-              }
-
-              if (hasThisLine)
-              {
-                wnd.Primitive.Lines.Remove(hitLine);
-              }
-              else
-              {
-                wnd.Primitive.Lines.Add(hitLine);
-              }
-            }
-          }
-        }
-
-        // горизонтальные
-        for (int i = 0; i < wnd.Primitive.Width; i++)
-        {
-          for (int j = 0; j <= wnd.Primitive.Height; j++)
-          {
-            var hitRect = new Rect(i * step + shiftFromBorder + 2, j * step + shiftFromBorder - 2, step - 4, 4);
-            if (hitRect.Contains(pos))
-            {
-              var hitLine = new LineInfo(i, j, i + 1, j);
-              bool hasThisLine = false;
-              foreach (var lineInfo in wnd.Primitive.Lines)
-              {
-                if (hitLine == lineInfo)
-                {
-                  hasThisLine = true;
-                  break;
-                }
-              }
-
-              if (hasThisLine)
-              {
-                wnd.Primitive.Lines.Remove(hitLine);
-              }
-              else
-              {
-                wnd.Primitive.Lines.Add(hitLine);
-              }
-            }
-          }
-        }
-        Refresh();
+        return;
       }
+
+      var hitLine = GetPointedLine(pos);
+
+      if (null == hitLine)
+      {
+        return;
+      }
+
+      var primitiveInfo = wnd.Primitive;
+      bool hasThisLine = primitiveInfo.Lines.Any(lineInfo => hitLine == lineInfo);
+
+      if (hasThisLine)
+      {
+        primitiveInfo.Lines.Remove(hitLine);
+      }
+      else
+      {
+        primitiveInfo.Lines.Add(hitLine);
+      }
+
+      Refresh();
     }
     #endregion
   }
