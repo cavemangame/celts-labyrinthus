@@ -94,6 +94,7 @@
     <Compile Include="Pages\PageShowLabyrinthus.xaml.cs">
       <DependentUpon>PageShowLabyrinthus.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PrimitiveSizeValidator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

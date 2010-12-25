@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 
@@ -7,17 +6,37 @@ namespace Labyrinthus.Pages
 {
   public partial class PagePreparePrimitives
   {
-    #region Конструктор
+    #region Свойства
+    public int PrimitiveWidth { get; set; }
+    public int PrimitiveHeight { get; set; }
+    #endregion
 
+    #region Конструктор
     public PagePreparePrimitives()
     {
       InitializeComponent();
+      DataContext = this;
+      PrimitiveWidth = 5;
+      PrimitiveHeight = 5;
+    }
+    #endregion
+
+    #region Обработка событий
+    private void Page_Loaded(object sender, RoutedEventArgs e)
+    {
+      RefreshCanvas();
     }
 
+    private void Primitive_TextChanged(object sender, TextChangedEventArgs e)
+    {
+      if (IsLoaded)
+      {
+        RefreshCanvas();
+      }
+    }
     #endregion
 
     #region Загрузка и сохранение
-
     private void LoadPrimitive(object sender, RoutedEventArgs e)
     {
       var wnd = (WindowMaster)Window.GetWindow(this);
@@ -34,8 +53,8 @@ namespace Labyrinthus.Pages
         if (result == true)
         {
           wnd.Primitive.Deserialize(dlg.FileName);
-          PrimitiveWidth.Text = wnd.Primitive.Width.ToString();
-          PrimitiveHeight.Text = wnd.Primitive.Height.ToString();
+          PrimitiveWidth = wnd.Primitive.Width;
+          PrimitiveHeight = wnd.Primitive.Height;
           PrimitiveCanvas.Refresh();
         }
       }
@@ -61,24 +80,13 @@ namespace Labyrinthus.Pages
         }
       }
     }
-
     #endregion
 
-    protected void PrimitivePropertiesChanged()
+    #region private методы
+    private void RefreshCanvas()
     {
-      int w, h;
-      if (Int32.TryParse(PrimitiveWidth.Text, out w) && Int32.TryParse(PrimitiveHeight.Text, out h))
-      {
-        if (h > 0 && w > 0)
-        {
-          PrimitiveCanvas.SetNewSizes(h, w);
-        }
-      }
+      PrimitiveCanvas.SetNewSizes(PrimitiveWidth, PrimitiveHeight);
     }
-
-    private void Primitive_TextChanged(object sender, TextChangedEventArgs e)
-    {
-      PrimitivePropertiesChanged();
-    }
+    #endregion
   }
 }
