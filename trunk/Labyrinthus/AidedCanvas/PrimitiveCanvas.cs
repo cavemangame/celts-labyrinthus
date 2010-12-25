@@ -14,34 +14,42 @@ namespace Labyrinthus.AidedCanvas
     /// <summary>
     /// Расстояние от краев канвы до начала сетки примитива
     /// </summary>
-    private const double SHIFT_FROM_BORDER = 10.0;
+    private const double SHIFT_FROM_BORDER = 10;
     #endregion
 
     #region Переменные
     /// <summary>
-    /// Ребра и прилегающая область (http://code.google.com/p/celts-labyrinthus/issues/detail?id=7)
+    /// Набор вижуалов канвы
     /// </summary>
-    private readonly List<Visual> edgesVisuals = new List<Visual>();
+    private readonly List<Visual> visuals = new List<Visual>();
 
     /// <summary>
-    /// Мап ребер и примитивов
+    /// Мап (любой вижуал ребра) - (линия примитива).
+    /// Используется для определения, над какой линей примитива расположена мышь.
+    /// Вижуал ребра - ребро и прилегающая к нему область,
+    ///                выделение ребра,
+    ///                подсветка при наведении.
     /// </summary>
-    private readonly Dictionary<Visual, LineInfo> primitivesMap = new Dictionary<Visual, LineInfo>();
+    private readonly Dictionary<Visual, LineInfo> edgeVisualPrimitiveMap = new Dictionary<Visual, LineInfo>();
+
+    /// <summary>
+    /// Мап (линия примитива) - (вижуал для отрисовки ее выделения)
+    /// </summary>
+    private readonly Dictionary<LineInfo, DrawingVisual> primitiveVisualMap = new Dictionary<LineInfo, DrawingVisual>();
     #endregion
 
     #region Ресурсы
-    private readonly Brush gridBrush;
-    private readonly Brush primitiveBorderBrush;
-    private readonly Pen gridPen;
+    private readonly Brush edgeBrush = new SolidColorBrush(Colors.LightGray);
+    private readonly Brush edgeAreaBrush = new SolidColorBrush(Colors.LightGray) { Opacity = 0 };
+    private readonly Brush primitiveBorderBrush = new SolidColorBrush(Colors.Black);
+    private readonly Pen edgePen;
     private readonly Pen primitiveBorderPen;
     #endregion
 
     #region Конструктор
     public PrimitiveCanvas()
     {
-      gridBrush = new SolidColorBrush(Colors.LightGray) { Opacity = 0.8 };
-      gridPen = new Pen(gridBrush, 1.0);
-      primitiveBorderBrush = new SolidColorBrush(Colors.Black);
+      edgePen = new Pen(edgeBrush, 1.0);
       primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
     }
     #endregion
@@ -49,12 +57,12 @@ namespace Labyrinthus.AidedCanvas
     #region Overrides
     protected override int VisualChildrenCount
     {
-      get { return edgesVisuals.Count; }
+      get { return visuals.Count; }
     }
 
     protected override Visual GetVisualChild(int index)
     {
-      return edgesVisuals[index];
+      return visuals[index];
     }
 
     #endregion
@@ -70,39 +78,44 @@ namespace Labyrinthus.AidedCanvas
     public void SetNewSizes(int h, int w)
     {
       var wnd = (WindowMaster)Window.GetWindow(this);
-      if (wnd != null)
+
+      if (null == wnd)
       {
-        wnd.Primitive.Height = h;
-        wnd.Primitive.Width = w;
+        return;
       }
+
+      wnd.Primitive.Height = h;
+      wnd.Primitive.Width = w;
       Refresh();
     }
 
     #endregion
 
     #region private методы
-    public void AddVisual(Visual visual)
+    private void AddVisual(Visual visual)
     {
-      edgesVisuals.Add(visual);
+      visuals.Add(visual);
       AddVisualChild(visual);
       AddLogicalChild(visual);
     }
 
-    public void RemoveVisual(Visual visual)
+    private void RemoveVisual(Visual visual)
     {
-      edgesVisuals.Remove(visual);
+      visuals.Remove(visual);
       RemoveVisualChild(visual);
       RemoveLogicalChild(visual);
     }
 
-    public void ClearAll()
+    private void ClearAll()
     {
-      foreach (var visual in edgesVisuals)
+      foreach (var visual in visuals)
       {
         RemoveVisualChild(visual);
         RemoveLogicalChild(visual);
       }
-      edgesVisuals.Clear();
+      visuals.Clear();
+      edgeVisualPrimitiveMap.Clear();
+      primitiveVisualMap.Clear();
     }
     #endregion
 
@@ -138,31 +151,83 @@ namespace Labyrinthus.AidedCanvas
       {
         for (int j = 0; j <= primitiveInfo.Height; j++)
         {
+          // вертикальные ребра
           if (j != primitiveInfo.Height)
           {
             var vertEdgeVisual = new DrawingVisual();
+            var lineInfo = new LineInfo(i, j, i, j + 1);
 
             using (DrawingContext dc = vertEdgeVisual.RenderOpen())
             {
-              dc.DrawLine(gridPen,
-                          new Point(i * step + SHIFT_FROM_BORDER, j *       step + SHIFT_FROM_BORDER),
-                          new Point(i * step + SHIFT_FROM_BORDER, (j + 1) * step + SHIFT_FROM_BORDER));
+              var startPoint = new Point(i * step + SHIFT_FROM_BORDER, j * step + SHIFT_FROM_BORDER);
+              var endPoint = new Point(i * step + SHIFT_FROM_BORDER, (j + 1) * step + SHIFT_FROM_BORDER);
+
+              // само ребро
+              dc.DrawLine(edgePen, startPoint, endPoint);
+
+              // прилегающая область
+              var segments = new PathSegmentCollection();
+
+              if (i != 0)
+              {
+                segments.Add(new LineSegment(
+                  new Point(startPoint.X - step / 2, (startPoint.Y + endPoint.Y) / 2), false));
+              }
+              segments.Add(new LineSegment(endPoint, false));
+              if (i != primitiveInfo.Width)
+              {
+                segments.Add(new LineSegment(
+                  new Point(startPoint.X + step / 2, (startPoint.Y + endPoint.Y) / 2), false));
+              }
+
+              var pathFigure = new PathFigure(startPoint, segments, true);
+              var figures = new PathFigureCollection {pathFigure};
+              var geometry = new PathGeometry(figures);
+
+              dc.DrawGeometry(edgeAreaBrush, null, geometry);
             }
-            primitivesMap.Add(vertEdgeVisual, new LineInfo(i, j, i, j + 1));
+
+            edgeVisualPrimitiveMap.Add(vertEdgeVisual, lineInfo);
             AddVisual(vertEdgeVisual);
           }
 
+          // горизонтальные ребра
           if (i != primitiveInfo.Width)
           {
             var horEdgeVisual = new DrawingVisual();
+            var lineInfo = new LineInfo(i, j, i + 1, j);
 
             using (DrawingContext dc = horEdgeVisual.RenderOpen())
             {
-              dc.DrawLine(gridPen,
-                          new Point(i *       step + SHIFT_FROM_BORDER, j * step + SHIFT_FROM_BORDER),
-                          new Point((i + 1) * step + SHIFT_FROM_BORDER, j * step + SHIFT_FROM_BORDER));
+              var startPoint = new Point(i * step + SHIFT_FROM_BORDER, j * step + SHIFT_FROM_BORDER);
+              var endPoint = new Point((i + 1) * step + SHIFT_FROM_BORDER, j * step + SHIFT_FROM_BORDER);
+
+              // само ребро
+              dc.DrawLine(edgePen, startPoint, endPoint);
+
+              // прилегающая область
+              var segments = new PathSegmentCollection();
+
+              if (j != 0)
+              {
+                segments.Add(new LineSegment(
+                  new Point((startPoint.X +endPoint.X) / 2, startPoint.Y - step / 2), false));
+              }
+              segments.Add(new LineSegment(endPoint, false));
+              if (j != primitiveInfo.Height)
+              {
+                segments.Add(new LineSegment(
+                  new Point((startPoint.X + endPoint.X) / 2, startPoint.Y + step / 2), false));
+              }
+
+              var pathFigure = new PathFigure(startPoint, segments, true);
+              var figures = new PathFigureCollection { pathFigure };
+              var geometry = new PathGeometry(figures);
+
+              dc.DrawGeometry(edgeAreaBrush, null, geometry);
             }
-            primitivesMap.Add(horEdgeVisual, new LineInfo(i, j, i + 1, j));
+
+            edgeVisualPrimitiveMap.Add(horEdgeVisual, lineInfo);
             AddVisual(horEdgeVisual);
           }
         }
@@ -187,68 +252,21 @@ namespace Labyrinthus.AidedCanvas
 
       foreach (var lineInfo in primitiveInfo.Lines)
       {
-          var primitiveVisual = new DrawingVisual();
+        var primitiveVisual = new DrawingVisual();
 
-          using (DrawingContext dc = primitiveVisual.RenderOpen())
-          {
-            dc.DrawLine(primitiveBorderPen,
-                        new Point(lineInfo.X0 * step + SHIFT_FROM_BORDER, lineInfo.Y0 * step + SHIFT_FROM_BORDER),
-                        new Point(lineInfo.X1 * step + SHIFT_FROM_BORDER, lineInfo.Y1 * step + SHIFT_FROM_BORDER));
-          }
-
-          AddVisual(primitiveVisual);
-      }
-    }
-
-
-/*
-    /// <summary>
-    /// Возвращает линию, над областью которой находится точка
-    /// </summary>
-    /// <param name="pos">точка</param>
-    /// <returns></returns>
-    private LineInfo GetPointedLine(Point pos)
-    {
-      var wnd = (WindowMaster)Window.GetWindow(this);
-
-      if (null == wnd)
-      {
-        return null;
-      }
-
-      var primitiveInfo = wnd.Primitive;
-      int cells = Math.Max(primitiveInfo.Height, primitiveInfo.Width);
-      double step = Math.Min((ActualHeight - 2 * SHIFT_FROM_BORDER) / cells,
-                             (ActualWidth - 2 * SHIFT_FROM_BORDER) / cells);
-
-      for (int i = 0; i <= primitiveInfo.Width; i++)
-      {
-        for (int j = 0; j <= primitiveInfo.Height; j++)
+        using (DrawingContext dc = primitiveVisual.RenderOpen())
         {
-          if (j != primitiveInfo.Height)
-          {
-            var vertHitRect = new Rect(i * step + SHIFT_FROM_BORDER - 2, j * step + SHIFT_FROM_BORDER + 2, 4, step - 4);
-
-            if (vertHitRect.Contains(pos))
-            {
-              return new LineInfo(i, j, i, j + 1);
-            }
-          }
-
-          if (i != primitiveInfo.Width)
-          {
-            var horHitRect = new Rect(i * step + SHIFT_FROM_BORDER + 2, j * step + SHIFT_FROM_BORDER - 2, step - 4, 4);
-
-            if (horHitRect.Contains(pos))
-            {
-              return new LineInfo(i, j, i + 1, j);
-            }
-          }
+          dc.DrawLine(primitiveBorderPen,
+                      new Point(lineInfo.X0 * step + SHIFT_FROM_BORDER, lineInfo.Y0 * step + SHIFT_FROM_BORDER),
+                      new Point(lineInfo.X1 * step + SHIFT_FROM_BORDER, lineInfo.Y1 * step + SHIFT_FROM_BORDER));
         }
+
+        edgeVisualPrimitiveMap.Add(primitiveVisual, lineInfo);
+        primitiveVisualMap.Add(lineInfo, primitiveVisual);
+        AddVisual(primitiveVisual);
       }
-      return null;
     }
-*/
+
 
 /*
     /// <summary>
@@ -310,7 +328,7 @@ namespace Labyrinthus.AidedCanvas
 
       var hitTest =  VisualTreeHelper.HitTest(this, pos);
       var edgeVisual= (DrawingVisual)hitTest.VisualHit;
-      var primitiveLineInfo = primitivesMap[edgeVisual];
+      var primitiveLineInfo = edgeVisualPrimitiveMap[edgeVisual];
 
       if (null == primitiveLineInfo)
       {
@@ -323,19 +341,31 @@ namespace Labyrinthus.AidedCanvas
       if (wasSelected)
       {
         primitiveInfo.Lines.Remove(primitiveLineInfo);
+
+        var primitiveVisual = primitiveVisualMap[primitiveLineInfo];
+
+        edgeVisualPrimitiveMap.Remove(primitiveVisual);
+        primitiveVisualMap.Remove(primitiveLineInfo);
+        RemoveVisual(primitiveVisual);
       }
       else
       {
         primitiveInfo.Lines.Add(primitiveLineInfo);
-      }
 
-      using (DrawingContext dc = edgeVisual.RenderOpen())
-      {
-        var step = GetDrawStep();
+        var primitiveVisual = new DrawingVisual();
 
-        dc.DrawLine(wasSelected ? gridPen : primitiveBorderPen,
-                    new Point(primitiveLineInfo.X0 * step + SHIFT_FROM_BORDER, primitiveLineInfo.Y0 * step + SHIFT_FROM_BORDER),
-                    new Point(primitiveLineInfo.X1 * step + SHIFT_FROM_BORDER, primitiveLineInfo.Y1 * step + SHIFT_FROM_BORDER));
+        using (DrawingContext dc = primitiveVisual.RenderOpen())
+        {
+          var step = GetDrawStep();
+
+          dc.DrawLine(primitiveBorderPen,
+                      new Point(primitiveLineInfo.X0 * step + SHIFT_FROM_BORDER, primitiveLineInfo.Y0 * step + SHIFT_FROM_BORDER),
+                      new Point(primitiveLineInfo.X1 * step + SHIFT_FROM_BORDER, primitiveLineInfo.Y1 * step + SHIFT_FROM_BORDER));
+        }
+
+        edgeVisualPrimitiveMap.Add(primitiveVisual, primitiveLineInfo);
+        primitiveVisualMap.Add(primitiveLineInfo, primitiveVisual);
+        AddVisual(primitiveVisual);
       }
     }
 
