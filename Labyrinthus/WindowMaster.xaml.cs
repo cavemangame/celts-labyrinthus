@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Navigation;
 using Labyrinthus.Objects;
-using Labyrinthus.Pages;
 
 namespace Labyrinthus
 {
@@ -35,15 +31,12 @@ namespace Labyrinthus
       {
         case 1:
           CurrentPageNumber = 0;
-          if (FramePages.CanGoBack)
-          {
-            FramePages.GoBack();
-          }
-          else
-          {
-            FramePages.Navigate(new Uri(@"Pages\PagePreparePrimitives.xaml", UriKind.RelativeOrAbsolute));          
-          }
+          NavigateBack(@"Pages\PagePreparePrimitives.xaml");
           BackButton.Visibility = Visibility.Hidden;
+          break;
+        case 2:
+          CurrentPageNumber = 1;
+          NavigateBack(@"Pages\PagePackPrimitives.xaml");
           break;
         default:
           throw new InvalidOperationException("Как-то умудрились нажать кнопку, хотя она невидима");
@@ -57,21 +50,45 @@ namespace Labyrinthus
       {
         case 0:
           CurrentPageNumber = 1;
-          if (FramePages.CanGoForward)
-          {
-            FramePages.GoForward();
-          }
-          else
-          {
-            FramePages.Navigate(new Uri(@"Pages\PageShowLabyrinthus.xaml", UriKind.RelativeOrAbsolute));         
-          }
-
+          NavigateForward(@"Pages\PagePackPrimitives.xaml");
+          break;
+        case 1:
+          CurrentPageNumber = 2;
+          NavigateForward(@"Pages\PageShowLabyrinthus.xaml");
           ForwardButton.Visibility = Visibility.Collapsed;
           break;
         default:
           throw new InvalidOperationException("Как-то умудрились нажать кнопку, хотя она невидима");
       }
       BackButton.Visibility = Visibility.Visible;
+    }
+
+    #endregion
+
+    #region Методы для навигации
+
+    private void NavigateForward(string uriPath)
+    {
+      if (FramePages.CanGoForward)
+      {
+        FramePages.GoForward();
+      }
+      else
+      {
+        FramePages.Navigate(new Uri(uriPath, UriKind.RelativeOrAbsolute));         
+      }
+    }
+
+    private void NavigateBack(string uriPath)
+    {
+      if (FramePages.CanGoBack)
+      {
+        FramePages.GoBack();
+      }
+      else
+      {
+        FramePages.Navigate(new Uri(uriPath, UriKind.RelativeOrAbsolute));
+      }
     }
 
     #endregion
