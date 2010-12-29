@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Labyrinthus.Objects;
 
 namespace Labyrinthus.AidedCanvas
 {
@@ -17,6 +14,8 @@ namespace Labyrinthus.AidedCanvas
     /// Вижуалы канвы
     /// </summary>
     private readonly List<Visual> visuals = new List<Visual>();
+
+    private DrawingVisual gridVisual;
 
     /// <summary>
     /// Расстояние от краев канвы до начала сетки примитива
@@ -35,6 +34,8 @@ namespace Labyrinthus.AidedCanvas
  
     private readonly Brush edgeBrush = new SolidColorBrush(Colors.LightGray);
     private readonly Pen edgePen;
+    private readonly Brush primitiveBorderBrush = new SolidColorBrush(Colors.Black);
+    private readonly Pen primitiveBorderPen;
 
     #endregion
 
@@ -43,6 +44,7 @@ namespace Labyrinthus.AidedCanvas
     public PrimitivePackCanvas()
     {
       edgePen = new Pen(edgeBrush, 1.0);
+      primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
     }
 
     #endregion
@@ -95,12 +97,13 @@ namespace Labyrinthus.AidedCanvas
     {
       ClearAll();
       DrawEdges();
-      //AddGrid();
+      DrawPrimitives();
     }
 
     #endregion
 
     #region Отрисовка
+
     /// <summary>
     /// Создание и отрисовка всех ребер
     /// </summary>
@@ -115,7 +118,7 @@ namespace Labyrinthus.AidedCanvas
 
       var primitiveInfo = wnd.Primitive;
       double step = GetDrawStep(wnd);
-      var gridVisual = new DrawingVisual();
+      gridVisual = new DrawingVisual();
 
       using (DrawingContext dc = gridVisual.RenderOpen())
       {
@@ -145,14 +148,81 @@ namespace Labyrinthus.AidedCanvas
       AddVisual(gridVisual);
     }
 
+    private void DrawPrimitives()
+    {
+      var wnd = (WindowMaster) Window.GetWindow(this);
+
+      if (null == wnd)
+      {
+        return;
+      }
+
+      var primitiveInfo = wnd.Primitive;
+      double step = GetDrawStep(wnd);
+      var primitiveVisual = new DrawingVisual();
+
+      // рисуем примитив в одном вижуале, чтоб работать с ним далее как с единым целым
+      using (DrawingContext dc = primitiveVisual.RenderOpen())
+      {
+        foreach (var lineInfo in primitiveInfo.Lines)
+        {
+          dc.DrawLine(primitiveBorderPen,
+                      new Point(lineInfo.X0*step + SHIFT_FROM_BORDER, lineInfo.Y0*step + SHIFT_FROM_BORDER),
+                      new Point(lineInfo.X1*step + SHIFT_FROM_BORDER, lineInfo.Y1*step + SHIFT_FROM_BORDER));
+        }
+      }
+      AddVisual(primitiveVisual);
+    }
+
+    #endregion
+
+    #region Вспомогательные методы
+
+    /// <summary>
+    /// Выдаем размер клетки для сетки. Здесь учитываем коэффициент (3) для свободной манипуляции примитивами
+    /// </summary>
     private double GetDrawStep(WindowMaster wnd)
     {
       var primitiveInfo = wnd.Primitive;
       int cells = CELLS_COUNT_KOEF * Math.Max(primitiveInfo.Height, primitiveInfo.Width);
       double step = Math.Min((ActualHeight - 2 * SHIFT_FROM_BORDER) / cells,
-                             (ActualWidth - 2 * SHIFT_FROM_BORDER) / cells) ;
+                             (ActualWidth - 2 * SHIFT_FROM_BORDER) / cells);
 
       return step;
+    }
+
+    #endregion
+
+    #region Манипуляции мышью
+
+    /// <summary>
+    /// тащим ли в данный момент примитив
+    /// </summary>
+    private bool isDragPrimitive = false;
+
+    /// <summary>
+    /// Позиция, за которую ухватили при перетаскивании примитив (относительно его края)
+    /// </summary>
+    private Point primitiveHandlePoint = new Point(0, 0);
+
+    protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+    {   
+      if (!isDragPrimitive)
+      {
+        //CatchPrimitive(e.GetPosition(this));
+        isDragPrimitive = true;
+      }
+      base.OnMouseLeftButtonDown(e);
+    }
+
+    protected override void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+    {
+      if (isDragPrimitive)
+      {
+        //PutPrimitive(e.GetPosition(this));
+        isDragPrimitive = false;
+      }
+      base.OnMouseLeftButtonUp(e);
     }
 
     #endregion
