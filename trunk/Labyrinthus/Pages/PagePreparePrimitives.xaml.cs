@@ -1,5 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using Labyrinthus.AidedCanvas;
+using Labyrinthus.Objects;
 using Microsoft.Win32;
 
 namespace Labyrinthus.Pages
@@ -15,9 +19,11 @@ namespace Labyrinthus.Pages
     public PagePreparePrimitives()
     {
       InitializeComponent();
-      DataContext = this;
+
       PrimitiveWidth = 5;
       PrimitiveHeight = 5;
+
+      DataContext = this;
     }
     #endregion
 
@@ -34,11 +40,41 @@ namespace Labyrinthus.Pages
         RefreshCanvas();
       }
     }
+
+    private void PrimitiveCanvas_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+      var primitiveEdge = e.Source as PrimitiveEdgeControl;
+
+      if (null == primitiveEdge)
+      {
+        return;
+      }
+
+      var primitiveLineInfo = new LineInfo(
+        (int)primitiveEdge.PrimitiveLineStart.X,
+        (int)primitiveEdge.PrimitiveLineStart.Y,
+        (int)(PrimitiveEdgeControl.EdgeTypes.Horizontal == primitiveEdge.EdgeType ? primitiveEdge.PrimitiveLineStart.X + 1 : primitiveEdge.PrimitiveLineStart.X),
+        (int)(PrimitiveEdgeControl.EdgeTypes.Vertical == primitiveEdge.EdgeType ? primitiveEdge.PrimitiveLineStart.Y + 1 : primitiveEdge.PrimitiveLineStart.Y));
+      var primitiveInfo = ((WindowMaster)Window.GetWindow(this)).Primitive;
+      bool wasSelected = primitiveInfo.Lines.Any(lineInfo => primitiveLineInfo == lineInfo);
+
+      if (wasSelected)
+      {
+        primitiveInfo.Lines.Remove(primitiveLineInfo);
+      }
+      else
+      {
+        primitiveInfo.Lines.Add(primitiveLineInfo);
+      }
+      primitiveEdge.ClickEdge(!wasSelected);
+    }
     #endregion
 
     #region Загрузка и сохранение
     private void LoadPrimitive(object sender, RoutedEventArgs e)
     {
+      // TODO: implement
+      /*
       var wnd = (WindowMaster)Window.GetWindow(this);
       if (wnd != null)
       {
@@ -55,13 +91,15 @@ namespace Labyrinthus.Pages
           wnd.Primitive.Deserialize(dlg.FileName);
           PrimitiveWidth = wnd.Primitive.Width;
           PrimitiveHeight = wnd.Primitive.Height;
-          PrimitiveCanvas.Refresh();
         }
       }
+      */
     }
 
     private void SavePrimitive(object sender, RoutedEventArgs e)
     {
+      // TODO: implement
+      /*
       var wnd = (WindowMaster)Window.GetWindow(this);
       if (wnd != null)
       {
@@ -79,13 +117,52 @@ namespace Labyrinthus.Pages
           wnd.Primitive.Serialize(dlg.FileName);
         }
       }
+      */
     }
     #endregion
 
     #region private методы
     private void RefreshCanvas()
     {
-      PrimitiveCanvas.SetNewSizes(PrimitiveWidth, PrimitiveHeight);
+      var primitive = ((WindowMaster)Window.GetWindow(this)).Primitive;
+
+      primitive.Height = PrimitiveHeight;
+      primitive.Width = PrimitiveWidth;
+
+      int cells = Math.Max(PrimitiveHeight, PrimitiveWidth);
+      double step = Math.Min((PrimitiveCanvas.Height) / cells,
+                             (PrimitiveCanvas.Width) / cells);
+
+      for (int i = 0; i <= PrimitiveWidth; i++)
+      {
+        for (int j = 0; j <= PrimitiveHeight; j++)
+        {
+          if (i != PrimitiveWidth)
+          {
+            DrawPrimitiveEdge(step, PrimitiveEdgeControl.EdgeTypes.Horizontal, i, j);
+          }
+
+          if (j != PrimitiveHeight)
+          {
+            DrawPrimitiveEdge(step, PrimitiveEdgeControl.EdgeTypes.Vertical, i, j);
+          }
+        }
+      }
+    }
+
+    private void DrawPrimitiveEdge(double edgeSize,
+      PrimitiveEdgeControl.EdgeTypes edgeType, int i, int j)
+    {
+      var edge = new PrimitiveEdgeControl
+      {
+        EdgeSize = edgeSize,
+        EdgeType = edgeType,
+        PrimitiveLineStart = new Point(i, j)
+      };
+
+      Canvas.SetTop(edge, j * edgeSize);
+      Canvas.SetLeft(edge, i * edgeSize);
+      PrimitiveCanvas.Children.Add(edge);
     }
     #endregion
   }

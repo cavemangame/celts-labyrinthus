@@ -8,13 +8,15 @@ namespace Labyrinthus
   /// <summary>
   /// Interaction logic for WindowMaster.xaml
   /// </summary>
-  public partial class WindowMaster : Window
+  public partial class WindowMaster
   {
-    private int CurrentPageNumber = 0;
-    public PrimitiveInfo Primitive = new PrimitiveInfo();
+    private int CurrentPageNumber;
+    public PrimitiveInfo Primitive { get; private set; }
 
     public WindowMaster()
     {
+      Primitive = new PrimitiveInfo();
+
       InitializeComponent();
     }
 

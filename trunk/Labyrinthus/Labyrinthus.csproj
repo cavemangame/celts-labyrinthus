@@ -75,6 +75,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="WindowMaster.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -89,7 +93,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AidedCanvas\PrimitiveCanvas.cs" />
+    <Compile Include="AidedCanvas\PrimitiveEdgeControl.cs" />
     <Compile Include="AidedCanvas\PrimitivePackCanvas.cs" />
     <Compile Include="Objects\LineInfo.cs" />
     <Compile Include="Objects\PrimitiveInfo.cs" />
