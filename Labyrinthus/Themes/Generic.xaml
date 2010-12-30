@@ -1,0 +1,35 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:AidedCanvas="clr-namespace:Labyrinthus.AidedCanvas">
+
+    <Style TargetType="{x:Type AidedCanvas:PrimitiveEdgeControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type AidedCanvas:PrimitiveEdgeControl}">
+                    <Canvas Name="EdgeCanvas" RenderTransform="{Binding EdgeTransform}">
+                        <Rectangle Height="{Binding EdgeAreaSize}" Width="{Binding EdgeAreaSize}" Fill="Aqua" Opacity="0">
+<!--                            <Rectangle.Triggers>-->
+<!--                                <EventTrigger RoutedEvent="Rectangle.MouseMove">-->
+<!--                                    <EventTrigger.EnterActions>-->
+<!--                                        <BeginStoryboard>-->
+<!--                                            <Storyboard>-->
+<!--                                                <DoubleAnimation Duration="0:0:5"-->
+<!--                                                                 Storyboard.TargetProperty="Height"/>-->
+<!--                                            </Storyboard>-->
+<!--                                        </BeginStoryboard>-->
+<!--                                    </EventTrigger.EnterActions>-->
+<!--                                </EventTrigger>-->
+<!--                            </Rectangle.Triggers>-->
+                        </Rectangle>
+                        <Line Stroke="{Binding EdgeBrush}" X1="0" Y1="0" X2="{Binding EdgeSize}" Y2="0">
+                            <Line.RenderTransform>
+                                <RotateTransform Angle="45" />
+                            </Line.RenderTransform>
+                        </Line>
+                    </Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
