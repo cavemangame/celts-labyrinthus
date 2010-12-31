@@ -69,51 +69,40 @@ namespace Labyrinthus.Pages
     #region Загрузка и сохранение
     private void LoadPrimitive(object sender, RoutedEventArgs e)
     {
-      // TODO: implement
-      /*
       var wnd = (WindowMaster)Window.GetWindow(this);
-      if (wnd != null)
+      var dlg = new OpenFileDialog
       {
-        var dlg = new OpenFileDialog
-        {
-          DefaultExt = ".pmv",
-          Filter = "Примитивы (.pmv)|*.pmv"
-        };
+        DefaultExt = ".pmv",
+        Filter = "Примитивы (.pmv)|*.pmv"
+      };
 
-        var result = dlg.ShowDialog();
+      var result = dlg.ShowDialog();
 
-        if (result == true)
-        {
-          wnd.Primitive.Deserialize(dlg.FileName);
-          PrimitiveWidth = wnd.Primitive.Width;
-          PrimitiveHeight = wnd.Primitive.Height;
-        }
+      if (result == true)
+      {
+        wnd.Primitive.Deserialize(dlg.FileName);
+        PrimitiveWidth = wnd.Primitive.Width;
+        PrimitiveHeight = wnd.Primitive.Height;
+        RefreshCanvas();
       }
-      */
     }
 
     private void SavePrimitive(object sender, RoutedEventArgs e)
     {
-      // TODO: implement
-      /*
       var wnd = (WindowMaster)Window.GetWindow(this);
-      if (wnd != null)
+      var dlg = new SaveFileDialog
       {
-        var dlg = new SaveFileDialog
-        {
-          FileName = "Примитив",
-          DefaultExt = ".pmv",
-          Filter = "Примитивы (.pmv)|*.pmv"
-        };
+        FileName = "Примитив",
+        DefaultExt = ".pmv",
+        Filter = "Примитивы (.pmv)|*.pmv"
+      };
 
-        var result = dlg.ShowDialog();
+      var result = dlg.ShowDialog();
 
-        if (result == true)
-        {
-          wnd.Primitive.Serialize(dlg.FileName);
-        }
+      if (result == true)
+      {
+        wnd.Primitive.Serialize(dlg.FileName);
       }
-      */
     }
     #endregion
 
@@ -170,7 +159,7 @@ namespace Labyrinthus.Pages
       PrimitiveCanvas.Children.Add(edge);
     }
 
-    private LineInfo GetPrimitiveLineInfo(PrimitiveEdgeControl primitiveEdge)
+    private static LineInfo GetPrimitiveLineInfo(PrimitiveEdgeControl primitiveEdge)
     {
       var primitiveLineInfo = new LineInfo(
         (int)primitiveEdge.PrimitiveLineStart.X,
