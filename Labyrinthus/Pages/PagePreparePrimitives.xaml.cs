@@ -50,11 +50,7 @@ namespace Labyrinthus.Pages
         return;
       }
 
-      var primitiveLineInfo = new LineInfo(
-        (int)primitiveEdge.PrimitiveLineStart.X,
-        (int)primitiveEdge.PrimitiveLineStart.Y,
-        (int)(PrimitiveEdgeControl.EdgeTypes.Horizontal == primitiveEdge.EdgeType ? primitiveEdge.PrimitiveLineStart.X + 1 : primitiveEdge.PrimitiveLineStart.X),
-        (int)(PrimitiveEdgeControl.EdgeTypes.Vertical == primitiveEdge.EdgeType ? primitiveEdge.PrimitiveLineStart.Y + 1 : primitiveEdge.PrimitiveLineStart.Y));
+      var primitiveLineInfo = GetPrimitiveLineInfo(primitiveEdge);
       var primitiveInfo = ((WindowMaster)Window.GetWindow(this)).Primitive;
       bool wasSelected = primitiveInfo.Lines.Any(lineInfo => primitiveLineInfo == lineInfo);
 
@@ -160,9 +156,29 @@ namespace Labyrinthus.Pages
         PrimitiveLineStart = new Point(i, j)
       };
 
+      var primitiveLineInfo = GetPrimitiveLineInfo(edge);
+      var primitiveInfo = ((WindowMaster)Window.GetWindow(this)).Primitive;
+      bool wasSelected = primitiveInfo.Lines.Any(lineInfo => primitiveLineInfo == lineInfo);
+
+      if (wasSelected)
+      {
+        edge.ClickEdge(true);
+      }
+
       Canvas.SetTop(edge, j * edgeSize);
       Canvas.SetLeft(edge, i * edgeSize);
       PrimitiveCanvas.Children.Add(edge);
+    }
+
+    private LineInfo GetPrimitiveLineInfo(PrimitiveEdgeControl primitiveEdge)
+    {
+      var primitiveLineInfo = new LineInfo(
+        (int)primitiveEdge.PrimitiveLineStart.X,
+        (int)primitiveEdge.PrimitiveLineStart.Y,
+        (int)(PrimitiveEdgeControl.EdgeTypes.Horizontal == primitiveEdge.EdgeType ? primitiveEdge.PrimitiveLineStart.X + 1 : primitiveEdge.PrimitiveLineStart.X),
+        (int)(PrimitiveEdgeControl.EdgeTypes.Vertical == primitiveEdge.EdgeType ? primitiveEdge.PrimitiveLineStart.Y + 1 : primitiveEdge.PrimitiveLineStart.Y));
+
+      return primitiveLineInfo;
     }
     #endregion
   }
