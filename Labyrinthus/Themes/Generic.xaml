@@ -8,25 +8,39 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type AidedCanvas:PrimitiveEdgeControl}">
                     <Canvas Name="EdgeCanvas" RenderTransform="{Binding EdgeTransform}">
-                        <Rectangle Height="{Binding EdgeAreaSize}" Width="{Binding EdgeAreaSize}" Fill="Aqua" Opacity="0">
-<!--                            <Rectangle.Triggers>-->
-<!--                                <EventTrigger RoutedEvent="Rectangle.MouseMove">-->
-<!--                                    <EventTrigger.EnterActions>-->
-<!--                                        <BeginStoryboard>-->
-<!--                                            <Storyboard>-->
-<!--                                                <DoubleAnimation Duration="0:0:5"-->
-<!--                                                                 Storyboard.TargetProperty="Height"/>-->
-<!--                                            </Storyboard>-->
-<!--                                        </BeginStoryboard>-->
-<!--                                    </EventTrigger.EnterActions>-->
-<!--                                </EventTrigger>-->
-<!--                            </Rectangle.Triggers>-->
-                        </Rectangle>
                         <Line Stroke="{Binding EdgeBrush}" X1="0" Y1="0" X2="{Binding EdgeSize}" Y2="0">
                             <Line.RenderTransform>
                                 <RotateTransform Angle="45" />
                             </Line.RenderTransform>
                         </Line>
+                        <Rectangle Height="{Binding EdgeAreaSize}" Width="{Binding EdgeAreaSize}"
+                                   Opacity="0" >
+                            <Rectangle.Fill>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="Gold" Offset="0" />
+                                    <GradientStop Color="White" Offset="1" />
+                                </RadialGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.Triggers>
+                                <EventTrigger RoutedEvent="Rectangle.MouseEnter">
+                                    <EventTrigger.Actions>
+                                        <BeginStoryboard Name="AreaAnimationSB">
+                                            <Storyboard>
+                                                <DoubleAnimation Duration="0:0:1"
+                                                                 Storyboard.TargetProperty="Opacity"
+                                                                 From="0" To="0.75"
+                                                                 AutoReverse="True" RepeatBehavior="Forever" />
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger.Actions>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="Rectangle.MouseLeave">
+                                    <EventTrigger.Actions>
+                                        <StopStoryboard BeginStoryboardName="AreaAnimationSB"/>
+                                    </EventTrigger.Actions>
+                                </EventTrigger>
+                            </Rectangle.Triggers>
+                        </Rectangle>
                     </Canvas>
                 </ControlTemplate>
             </Setter.Value>
