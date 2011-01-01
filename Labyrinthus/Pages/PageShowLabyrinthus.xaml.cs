@@ -1,21 +1,56 @@
 ﻿using System;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace Labyrinthus.Pages
 {
-  public partial class PageShowLabyrinthus : Page
+  public partial class PageShowLabyrinthus
   {
     #region Ресурсы
     // TODO: добавить таску запихнуть все дефолтные кисти в ресурсы
-    private readonly Brush primitiveBorderBrush;
-    private readonly Pen primitiveBorderPen;
-    private readonly Brush floorBrush;
+    private Brush floorBrush;
+    private Brush primitiveBorderBrush;
+    private Pen primitiveBorderPen;
 
+    #endregion
+
+    #region Свойства
+
+    /// <summary>
+    /// Цвет пола. Задается в ColorPicker.
+    /// </summary>
+    public Color FloorColor
+    {
+      get { return (Color)GetValue(FloorColorProperty); }
+      set { SetValue(FloorColorProperty, value); }
+    }
+    public static readonly DependencyProperty FloorColorProperty = DependencyProperty.Register(
+      "FloorColor", typeof(Color), typeof(PageShowLabyrinthus),
+      new FrameworkPropertyMetadata(Colors.Brown, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                                    SelectedColorPropertyChanged));
+
+    /// <summary>
+    /// Цвет стен. Задается в ColorPicker.
+    /// </summary>
+    public Color BorderColor
+    {
+      get { return (Color)GetValue(BorderColorProperty); }
+      set { SetValue(BorderColorProperty, value); }
+    }
+    public static readonly DependencyProperty BorderColorProperty = DependencyProperty.Register(
+      "BorderColor", typeof(Color), typeof(PageShowLabyrinthus),
+      new FrameworkPropertyMetadata(Colors.Brown, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                                    SelectedColorPropertyChanged));
+
+    private static void SelectedColorPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+      var page = (PageShowLabyrinthus)d;
+
+      page.UpdatePicture();
+    }
     #endregion
 
     #region Конструктор
@@ -23,47 +58,30 @@ namespace Labyrinthus.Pages
     public PageShowLabyrinthus()
     {
       InitializeComponent();
-      primitiveBorderBrush = new SolidColorBrush(Colors.Black);
-      primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
-      floorBrush = new SolidColorBrush(Colors.Brown);
+
+      FloorColor = Colors.Brown;
+      BorderColor = Colors.Black;
+
+      DataContext = this;
     }
 
     #endregion
 
-    #region Реакция на действия пользователя
+    #region Обработка событий
+
+    private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
+    {
+      UpdatePicture();
+    }
 
     private void SaveLabyrinthus(object sender, RoutedEventArgs e)
     {
       OnSaveLabyrinthus();
     }
 
-    private void PrimitiveZoom_TextChanged(object sender, TextChangedEventArgs e)
-    {
-      UpdatePicture();
-    }
-
-    private void PicHeight_TextChanged(object sender, TextChangedEventArgs e)
-    {
-      UpdatePicture();
-    }
-
-    private void PicWidth_TextChanged(object sender, TextChangedEventArgs e)
-    {
-      UpdatePicture();
-    }
-
-    private void Page_Loaded(object sender, RoutedEventArgs e)
-    {
-      UpdatePicture();
-    }
-
-    private void FloorColorLabelClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-      FloorColorPopup.IsOpen = true;
-    }
-
     #endregion
 
+    #region private методы
     #region Отрисовка лабиринта
 
     private void UpdatePicture()
@@ -72,6 +90,11 @@ namespace Labyrinthus.Pages
       {
         return;
       }
+
+      primitiveBorderBrush = new SolidColorBrush(BorderColor);
+      primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
+      floorBrush = new SolidColorBrush(FloorColor);
+
       var wnd = (WindowMaster)Window.GetWindow(this);
       if (wnd != null)
       {
@@ -123,7 +146,7 @@ namespace Labyrinthus.Pages
       }
     }
 
-    private void DrawPrimitive(WindowMaster wnd, int i, int j, double zoom, StreamGeometryContext geoContext)
+    private static void DrawPrimitive(WindowMaster wnd, int i, int j, double zoom, StreamGeometryContext geoContext)
     {
       foreach (var lineInfo in wnd.Primitive.Lines)
       {
@@ -166,6 +189,7 @@ namespace Labyrinthus.Pages
       }
     }
 
+    #endregion
     #endregion
   }
 }
