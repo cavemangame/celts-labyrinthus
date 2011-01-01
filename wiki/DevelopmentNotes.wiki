@@ -1,0 +1,7 @@
+#summary Development Notes.
+
+= To develop you need: =
+
+  * VS 2010
+  * [http://wpf.codeplex.com/ WPF Toolkit] - download and install
+  * [http://wpftoolkit.codeplex.com/ Extended WPF Toolkit 1.2.0] - _libs_ folder already contains it 
