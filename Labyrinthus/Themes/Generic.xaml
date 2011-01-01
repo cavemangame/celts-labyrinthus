@@ -8,22 +8,27 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type AidedCanvas:PrimitiveEdgeControl}">
                     <Canvas Name="EdgeCanvas" RenderTransform="{Binding EdgeTransform}">
-                        <Line Stroke="{Binding EdgeBrush}" X1="0" Y1="0" X2="{Binding EdgeAreaSize}" Y2="{Binding EdgeAreaSize}" />
-                        <Rectangle Height="{Binding EdgeAreaSize}" Width="{Binding EdgeAreaSize}" Opacity="0" >
+                        <Rectangle Name="AreaRect" Opacity="0"
+                                   Height="{Binding EdgeAreaSize}" Width="{Binding EdgeAreaSize}" >
                             <Rectangle.Fill>
                                 <RadialGradientBrush>
                                     <GradientStop Color="Gold" Offset="0" />
                                     <GradientStop Color="White" Offset="1" />
                                 </RadialGradientBrush>
                             </Rectangle.Fill>
+                        </Rectangle>
+                        <Line Stroke="{Binding EdgeBrush}" X1="0" Y1="0" X2="{Binding EdgeAreaSize}" Y2="{Binding EdgeAreaSize}" />
+                        <Rectangle Height="{Binding EdgeAreaSize}" Width="{Binding EdgeAreaSize}"
+                                   Opacity="0" Fill="White" >
                             <Rectangle.Triggers>
                                 <EventTrigger RoutedEvent="Rectangle.MouseEnter">
                                     <EventTrigger.Actions>
                                         <BeginStoryboard Name="AreaAnimationSB">
                                             <Storyboard>
                                                 <DoubleAnimation Duration="0:0:1"
+                                                                 Storyboard.TargetName="AreaRect"
                                                                  Storyboard.TargetProperty="Opacity"
-                                                                 From="0" To="0.75"
+                                                                 From="0.2" To="1"
                                                                  AutoReverse="True" RepeatBehavior="Forever" />
                                             </Storyboard>
                                         </BeginStoryboard>
