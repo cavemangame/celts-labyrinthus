@@ -8,7 +8,7 @@ namespace Labyrinthus.Objects
   [Serializable]
   public class PrimitiveInfo
   {
-    #region Поля
+    #region Свойства
 
     public int Width { get; set;}
     public int Height { get; set; }
@@ -20,8 +20,19 @@ namespace Labyrinthus.Objects
 
     public PrimitiveInfo()
     {
-      Width = Height = 0;
       Lines = new List<LineInfo>();
+
+      Clear();
+    }
+
+    #endregion
+
+    #region public методы
+
+    public void Clear()
+    {
+      Width = Height = 0;
+      Lines.Clear();
     }
 
     #endregion
