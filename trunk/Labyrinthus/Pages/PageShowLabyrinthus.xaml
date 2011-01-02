@@ -1,7 +1,7 @@
 ﻿<Page x:Class="Labyrinthus.Pages.PageShowLabyrinthus"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:extToolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit/extended"
+    xmlns:Controls="clr-namespace:Microsoft.Windows.Controls;assembly=WPFToolkit.Extended"
     Title="PageShowLabyrinthus" ShowsNavigationUI="False" KeepAlive="True" Loaded="LabyrinthusParams_Changed">
 
     <DockPanel LastChildFill="True">
@@ -34,13 +34,13 @@
                 <Label Grid.Column="0" Grid.Row="2">
                     Цвет пола:
                 </Label>
-                <extToolkit:ColorPicker Grid.Column="1" Grid.Row="2"
+                <Controls:ColorPicker Grid.Column="1" Grid.Row="2"
                                         SelectedColor="{Binding FloorColor}" />
 
                 <Label Grid.Column="0" Grid.Row="3">
                     Цвет стен:
                 </Label>
-                <extToolkit:ColorPicker Grid.Column="1" Grid.Row="3"
+                <Controls:ColorPicker Grid.Column="1" Grid.Row="3"
                                         SelectedColor="{Binding BorderColor}" />
             </Grid>
             <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SaveLabyrinthus">Сохранить</Button>
