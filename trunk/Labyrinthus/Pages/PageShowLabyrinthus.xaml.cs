@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -18,6 +17,16 @@ namespace Labyrinthus.Pages
     #endregion
 
     #region Свойства
+
+    /// <summary>
+    /// Масштаб в пикселях
+    /// </summary>
+    public int Zoom { get; set; }
+
+    /// <summary>
+    /// Угол поворота
+    /// </summary>
+    public int RotateAngle { get; set; }
 
     /// <summary>
     /// Цвет пола. Задается в ColorPicker.
@@ -59,6 +68,8 @@ namespace Labyrinthus.Pages
     {
       InitializeComponent();
 
+      Zoom = 10;
+      RotateAngle = 0;
       FloorColor = Colors.Brown;
       BorderColor = Colors.Black;
 
@@ -91,60 +102,73 @@ namespace Labyrinthus.Pages
         return;
       }
 
+      var wnd = (WindowMaster)Window.GetWindow(this);
+
+      if (wnd == null)
+      {
+        return;
+      }
+      if (wnd.Primitive.Width <= 0 || wnd.Primitive.Height <= 0)
+      {
+        return;
+      }
+
       primitiveBorderBrush = new SolidColorBrush(BorderColor);
       primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
       floorBrush = new SolidColorBrush(FloorColor);
 
-      var wnd = (WindowMaster)Window.GetWindow(this);
-      if (wnd != null)
+      // видимая часть рисунка
+      var visiblePicHeight = (int)LabyrinthusImagePanel.Height;
+      var visiblePicWidth = (int)LabyrinthusImagePanel.Width;
+
+      LabyrinthusImage.Width = visiblePicWidth;
+      LabyrinthusImage.Height = visiblePicHeight;
+
+      // полный рисунок - нужно для поворота и движения картинки
+      var totalPicHeight = visiblePicHeight * 2;
+      var totalPicWidth = visiblePicWidth * 2;
+
+      // определяем количество примитивов по высоте и ширине рисунка
+      var hCount = totalPicHeight / (Zoom * wnd.Primitive.Height);
+      var wCount = totalPicWidth / (Zoom * wnd.Primitive.Width);
+
+      // начинаем рисовать
+      var drawingVisual = new DrawingVisual();
+      DrawingContext dc = drawingVisual.RenderOpen();
+
+      dc.DrawRectangle(floorBrush, null, new Rect(0, 0, totalPicWidth, totalPicHeight));
+      for (int i = 0; i < wCount; i++)
       {
-        if (wnd.Primitive.Width <= 0 || wnd.Primitive.Height <= 0)
+        // на каждый примитив - медленней, на всё - медленней
+        var geo = new StreamGeometry();
+
+        using (var geoContext = geo.Open())
         {
-          return;
-        }
-        int picHeight, picWidth;
-        double zoom;
-        if (!Int32.TryParse(PicHeight.Text, out picHeight) || !Int32.TryParse(PicWidth.Text, out picWidth)
-            || !Double.TryParse(PrimitiveZoom.Text, out zoom))
-        {
-          return;
-        }
-        LabyrinthusImage.Width = picWidth;
-        LabyrinthusImage.Height = picHeight;
-
-        // определяем количество примитивов по высоте и ширине рисунка
-        var hCount = (int)(picHeight / (zoom * wnd.Primitive.Height));
-        var wCount = (int)(picWidth / (zoom * wnd.Primitive.Width));
-
-        var drawingVisual = new DrawingVisual();
-
-        DrawingContext dc = drawingVisual.RenderOpen();
-
-        // фон
-        dc.DrawRectangle(floorBrush, null, new Rect(0, 0, picWidth, picHeight));
-
-        // рисуем стены
-        for (int i = 0; i <= wCount; i++)
-        {
-          // на каждый примитив - медленней, на всё - медленней
-          var geo = new StreamGeometry();
-          using (var geoContext = geo.Open())
+          for (int j = 0; j < hCount; j++)
           {
-            for (int j = 0; j <= hCount; j++)
-            {
-              DrawPrimitive(wnd, i, j, zoom, geoContext);
-            }
+            DrawPrimitive(wnd, i, j, Zoom, geoContext);
           }
-          dc.DrawGeometry(primitiveBorderBrush, primitiveBorderPen, geo);
-
         }
-        dc.Close();
-
-        var bmp = new RenderTargetBitmap(picWidth, picHeight, 96, 96, PixelFormats.Pbgra32);
-        bmp.Render(drawingVisual);
-        LabyrinthusImage.Source = bmp;
+        dc.DrawGeometry(primitiveBorderBrush, primitiveBorderPen, geo);
       }
+      dc.Close();
+
+      drawingVisual.Transform = new RotateTransform(
+        RotateAngle, totalPicWidth / 2d, totalPicHeight / 2d);
+
+      var bmp = new RenderTargetBitmap(totalPicWidth, totalPicHeight, 96, 96, PixelFormats.Pbgra32);
+
+      bmp.Render(drawingVisual);
+
+      // показываем только центральную часть
+      var visibleRect = new Int32Rect(totalPicWidth / 2 - visiblePicWidth / 2,
+                                      totalPicHeight / 2 - visiblePicHeight / 2,
+                                      visiblePicWidth, visiblePicHeight);
+      var visibleImage = new CroppedBitmap(bmp, visibleRect);
+
+      LabyrinthusImage.Source = visibleImage;
     }
+
 
     private static void DrawPrimitive(WindowMaster wnd, int i, int j, double zoom, StreamGeometryContext geoContext)
     {

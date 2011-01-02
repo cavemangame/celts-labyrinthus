@@ -6,43 +6,47 @@
 
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Right">
-            <Label Margin="0,2,0,0" HorizontalAlignment="Center">Масштаб (пиксели)</Label>
-            <TextBox Name="PrimitiveZoom" TextChanged="LabyrinthusParams_Changed">10</TextBox>
-
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" MinWidth="50"/>
                 </Grid.ColumnDefinitions>
                 <Label Grid.Column="0" Grid.Row="0">
+                    Зум (pix):
+                </Label>
+                <TextBox Grid.Column="1" Grid.Row="0"
+                         Text="{Binding Zoom, UpdateSourceTrigger=PropertyChanged}"
+                         TextChanged="LabyrinthusParams_Changed" />
+
+                <Label Grid.Column="0" Grid.Row="1">
+                    Поворот:
+                </Label>
+                <TextBox Grid.Column="1" Grid.Row="1"
+                         Text="{Binding RotateAngle, UpdateSourceTrigger=PropertyChanged}"
+                         TextChanged="LabyrinthusParams_Changed" />
+
+                <Label Grid.Column="0" Grid.Row="2">
                     Цвет пола:
                 </Label>
-                <extToolkit:ColorPicker Grid.Column="1" Grid.Row="0"
-                                        SelectedColor="{Binding FloorColor}"
-                                       />
-                <Label Grid.Column="0" Grid.Row="1">
+                <extToolkit:ColorPicker Grid.Column="1" Grid.Row="2"
+                                        SelectedColor="{Binding FloorColor}" />
+
+                <Label Grid.Column="0" Grid.Row="3">
                     Цвет стен:
                 </Label>
-                <extToolkit:ColorPicker Grid.Column="1" Grid.Row="1"
-                                        SelectedColor="{Binding BorderColor}"
-                                        />
+                <extToolkit:ColorPicker Grid.Column="1" Grid.Row="3"
+                                        SelectedColor="{Binding BorderColor}" />
             </Grid>
-
-            <DockPanel>
-                <Label>Высота</Label>
-                <TextBox Name="PicHeight" TextChanged="LabyrinthusParams_Changed">600</TextBox>
-            </DockPanel>
-            <DockPanel>
-                <Label>Ширина</Label>
-                <TextBox Name="PicWidth" TextChanged="LabyrinthusParams_Changed">800</TextBox>
-            </DockPanel>
             <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SaveLabyrinthus">Сохранить</Button>
         </StackPanel>
-        <StackPanel DockPanel.Dock="Left">
+        <StackPanel DockPanel.Dock="Left" Name="LabyrinthusImagePanel"
+                    Width="600" Height="600">
             <Image Name="LabyrinthusImage" HorizontalAlignment="Left" VerticalAlignment="Stretch"></Image>
         </StackPanel>
     </DockPanel>
