@@ -1,15 +1,19 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace Labyrinthus.Pages
 {
+  /// <summary>
+  /// Страница содержит финальное представление лабиринта.
+  /// Рисунок можно перемещать и поворачивать.
+  /// </summary>
   public partial class PageShowLabyrinthus
   {
     #region Поля
-    // TODO: добавить таску запихнуть все дефолтные кисти в ресурсы
     private Brush floorBrush;
     private Brush primitiveBorderBrush;
     private Pen primitiveBorderPen;
@@ -28,6 +32,11 @@ namespace Labyrinthus.Pages
     /// Начальная точка перемещения
     /// </summary>
     private Point moveStartPoint;
+
+    /// <summary>
+    /// Битмам лабиринта. Сохраняется для ускорения перемещения.
+    /// </summary>
+    private RenderTargetBitmap labirinthusBitmap;
     #endregion
 
     #region Свойства
@@ -72,7 +81,7 @@ namespace Labyrinthus.Pages
     {
       var page = (PageShowLabyrinthus)d;
 
-      page.UpdatePicture();
+      page.DrawLabyrinthus();
     }
     #endregion
 
@@ -94,33 +103,34 @@ namespace Labyrinthus.Pages
 
     #region Обработка событий
 
-    private void LabyrinthusImagePanel_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void LabyrinthusImagePanel_MouseDown(object sender, MouseButtonEventArgs e)
     {
       // начало перетаскивания рисунка
       moveStartPoint = e.MouseDevice.GetPosition(LabyrinthusImagePanel);
     }
 
-    private void LabyrinthusImagePanel_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    private void LabyrinthusImagePanel_MouseMove(object sender, MouseEventArgs e)
     {
+      if (e.LeftButton != MouseButtonState.Pressed)
+      {
+        return;
+      }
 
-    }
-
-    private void LabyrinthusImagePanel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-      // окончание перетаскивания рисунка
       var moveEndPoint = e.MouseDevice.GetPosition(LabyrinthusImagePanel);
       var wnd = (WindowMaster)Application.Current.MainWindow;
 
+      // TODO: остаток от деления должен учитывать поворот
       xShift = (int)(xShift + moveEndPoint.X - moveStartPoint.X) % (wnd.Primitive.Width * Zoom);
       yShift = (int)(yShift + moveEndPoint.Y - moveStartPoint.Y) % (wnd.Primitive.Height * Zoom);
 
-      UpdatePicture();
+      moveStartPoint = moveEndPoint;
+      DrawBitmap();
     }
 
     private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
     {
       xShift = yShift = 0;
-      UpdatePicture();
+      DrawLabyrinthus();
     }
 
     private void SaveLabyrinthus(object sender, RoutedEventArgs e)
@@ -133,13 +143,30 @@ namespace Labyrinthus.Pages
     #region private методы
     #region Отрисовка лабиринта
 
-    private void UpdatePicture()
+    private void DrawLabyrinthus()
     {
       if (!IsInitialized)
       {
         return;
       }
 
+      var wnd = (WindowMaster)Application.Current.MainWindow;
+
+      if (wnd.Primitive.Width <= 0 || wnd.Primitive.Height <= 0)
+      {
+        return;
+      }
+
+      UpdateBitmap();
+      DrawBitmap();
+    }
+
+
+    /// <summary>
+    /// Пересоздает полную картинку для ускорения перемещения
+    /// </summary>
+    private void UpdateBitmap()
+    {
       var wnd = (WindowMaster)Application.Current.MainWindow;
 
       if (wnd.Primitive.Width <= 0 || wnd.Primitive.Height <= 0)
@@ -154,9 +181,6 @@ namespace Labyrinthus.Pages
       // видимая часть рисунка
       var visiblePicHeight = (int)LabyrinthusImagePanel.Height;
       var visiblePicWidth = (int)LabyrinthusImagePanel.Width;
-
-      LabyrinthusImage.Width = visiblePicWidth;
-      LabyrinthusImage.Height = visiblePicHeight;
 
       // полный рисунок - нужно для поворота и движения картинки
       var totalPicHeight = visiblePicHeight * 3;
@@ -190,15 +214,32 @@ namespace Labyrinthus.Pages
       drawingVisual.Transform = new RotateTransform(
         RotateAngle, totalPicWidth / 2d, totalPicHeight / 2d);
 
-      var bmp = new RenderTargetBitmap(totalPicWidth, totalPicHeight, 96, 96, PixelFormats.Pbgra32);
+      labirinthusBitmap = new RenderTargetBitmap(totalPicWidth, totalPicHeight, 96, 96, PixelFormats.Pbgra32);
+      labirinthusBitmap.Render(drawingVisual);
+    }
 
-      bmp.Render(drawingVisual);
+
+    /// <summary>
+    /// Рисует готовый битмап лабиринта
+    /// </summary>
+    private void DrawBitmap()
+    {
+      // видимая часть рисунка
+      var visiblePicHeight = (int)LabyrinthusImagePanel.Height;
+      var visiblePicWidth = (int)LabyrinthusImagePanel.Width;
+
+      LabyrinthusImage.Width = visiblePicWidth;
+      LabyrinthusImage.Height = visiblePicHeight;
+
+      // полный рисунок - нужно для поворота и движения картинки
+      var totalPicHeight = visiblePicHeight * 3;
+      var totalPicWidth = visiblePicWidth * 3;
 
       // показываем только центральную часть
       var visibleRect = new Int32Rect(totalPicWidth / 2 - visiblePicWidth / 2 - xShift,
                                       totalPicHeight / 2 - visiblePicHeight / 2 - yShift,
                                       visiblePicWidth, visiblePicHeight);
-      var visibleImage = new CroppedBitmap(bmp, visibleRect);
+      var visibleImage = new CroppedBitmap(labirinthusBitmap, visibleRect);
 
       LabyrinthusImage.Source = visibleImage;
     }
