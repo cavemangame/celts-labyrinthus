@@ -46,7 +46,10 @@
             <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SaveLabyrinthus">Сохранить</Button>
         </StackPanel>
         <StackPanel DockPanel.Dock="Left" Name="LabyrinthusImagePanel"
-                    Width="600" Height="600">
+                    Width="600" Height="600"
+                    MouseDown="LabyrinthusImagePanel_MouseDown"
+                    MouseMove="LabyrinthusImagePanel_MouseMove"
+                    MouseUp="LabyrinthusImagePanel_MouseUp">
             <Image Name="LabyrinthusImage" HorizontalAlignment="Left" VerticalAlignment="Stretch"></Image>
         </StackPanel>
     </DockPanel>
