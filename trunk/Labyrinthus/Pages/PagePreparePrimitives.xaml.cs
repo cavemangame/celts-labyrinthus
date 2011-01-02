@@ -37,6 +37,11 @@ namespace Labyrinthus.Pages
     {
       if (IsLoaded)
       {
+        var primitive = ((WindowMaster)Application.Current.MainWindow).Primitive;
+
+        PrimitiveCanvas.Children.Clear();
+        primitive.Clear();
+
         RefreshCanvas();
       }
     }
@@ -51,7 +56,7 @@ namespace Labyrinthus.Pages
       }
 
       var primitiveLineInfo = GetPrimitiveLineInfo(primitiveEdge);
-      var primitiveInfo = ((WindowMaster)Window.GetWindow(this)).Primitive;
+      var primitiveInfo = ((WindowMaster)Application.Current.MainWindow).Primitive;
       bool wasSelected = primitiveInfo.Lines.Any(lineInfo => primitiveLineInfo == lineInfo);
 
       if (wasSelected)
@@ -69,7 +74,7 @@ namespace Labyrinthus.Pages
     #region Загрузка и сохранение
     private void LoadPrimitive(object sender, RoutedEventArgs e)
     {
-      var wnd = (WindowMaster)Window.GetWindow(this);
+      var wnd = (WindowMaster)Application.Current.MainWindow;
       var dlg = new OpenFileDialog
       {
         DefaultExt = ".pmv",
@@ -83,13 +88,14 @@ namespace Labyrinthus.Pages
         wnd.Primitive.Deserialize(dlg.FileName);
         PrimitiveWidth = wnd.Primitive.Width;
         PrimitiveHeight = wnd.Primitive.Height;
+        PrimitiveCanvas.Children.Clear();
         RefreshCanvas();
       }
     }
 
     private void SavePrimitive(object sender, RoutedEventArgs e)
     {
-      var wnd = (WindowMaster)Window.GetWindow(this);
+      var wnd = (WindowMaster)Application.Current.MainWindow;
       var dlg = new SaveFileDialog
       {
         FileName = "Примитив",
@@ -109,7 +115,7 @@ namespace Labyrinthus.Pages
     #region private методы
     private void RefreshCanvas()
     {
-      var primitive = ((WindowMaster)Window.GetWindow(this)).Primitive;
+      var primitive = ((WindowMaster)Application.Current.MainWindow).Primitive;
 
       primitive.Height = PrimitiveHeight;
       primitive.Width = PrimitiveWidth;
@@ -146,7 +152,7 @@ namespace Labyrinthus.Pages
       };
 
       var primitiveLineInfo = GetPrimitiveLineInfo(edge);
-      var primitiveInfo = ((WindowMaster)Window.GetWindow(this)).Primitive;
+      var primitiveInfo = ((WindowMaster)Application.Current.MainWindow).Primitive;
       bool wasSelected = primitiveInfo.Lines.Any(lineInfo => primitiveLineInfo == lineInfo);
 
       if (wasSelected)
