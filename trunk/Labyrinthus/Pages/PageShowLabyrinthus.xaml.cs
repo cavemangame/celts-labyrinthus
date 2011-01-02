@@ -8,12 +8,26 @@ namespace Labyrinthus.Pages
 {
   public partial class PageShowLabyrinthus
   {
-    #region Ресурсы
+    #region Поля
     // TODO: добавить таску запихнуть все дефолтные кисти в ресурсы
     private Brush floorBrush;
     private Brush primitiveBorderBrush;
     private Pen primitiveBorderPen;
 
+    /// <summary>
+    /// Сдвиг рисунка лабиринта по горизонати
+    /// </summary>
+    private int xShift;
+
+    /// <summary>
+    /// Сдвиг рисунка лабиринта по вертикали
+    /// </summary>
+    private int yShift;
+
+    /// <summary>
+    /// Начальная точка перемещения
+    /// </summary>
+    private Point moveStartPoint;
     #endregion
 
     #region Свойства
@@ -80,8 +94,32 @@ namespace Labyrinthus.Pages
 
     #region Обработка событий
 
+    private void LabyrinthusImagePanel_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+      // начало перетаскивания рисунка
+      moveStartPoint = e.MouseDevice.GetPosition(LabyrinthusImagePanel);
+    }
+
+    private void LabyrinthusImagePanel_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+
+    }
+
+    private void LabyrinthusImagePanel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+      // окончание перетаскивания рисунка
+      var moveEndPoint = e.MouseDevice.GetPosition(LabyrinthusImagePanel);
+      var wnd = (WindowMaster)Application.Current.MainWindow;
+
+      xShift = (int)(xShift + moveEndPoint.X - moveStartPoint.X) % (wnd.Primitive.Width * Zoom);
+      yShift = (int)(yShift + moveEndPoint.Y - moveStartPoint.Y) % (wnd.Primitive.Height * Zoom);
+
+      UpdatePicture();
+    }
+
     private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
     {
+      xShift = yShift = 0;
       UpdatePicture();
     }
 
@@ -121,8 +159,8 @@ namespace Labyrinthus.Pages
       LabyrinthusImage.Height = visiblePicHeight;
 
       // полный рисунок - нужно для поворота и движения картинки
-      var totalPicHeight = visiblePicHeight * 2;
-      var totalPicWidth = visiblePicWidth * 2;
+      var totalPicHeight = visiblePicHeight * 3;
+      var totalPicWidth = visiblePicWidth * 3;
 
       // определяем количество примитивов по высоте и ширине рисунка
       var hCount = totalPicHeight / (Zoom * wnd.Primitive.Height);
@@ -157,8 +195,8 @@ namespace Labyrinthus.Pages
       bmp.Render(drawingVisual);
 
       // показываем только центральную часть
-      var visibleRect = new Int32Rect(totalPicWidth / 2 - visiblePicWidth / 2,
-                                      totalPicHeight / 2 - visiblePicHeight / 2,
+      var visibleRect = new Int32Rect(totalPicWidth / 2 - visiblePicWidth / 2 - xShift,
+                                      totalPicHeight / 2 - visiblePicHeight / 2 - yShift,
                                       visiblePicWidth, visiblePicHeight);
       var visibleImage = new CroppedBitmap(bmp, visibleRect);
 
