@@ -72,12 +72,12 @@ namespace Labyrinthus.AidedCanvas
       AddLogicalChild(visual);
     }
 
-    private void RemoveVisual(Visual visual)
-    {
-      visuals.Remove(visual);
-      RemoveVisualChild(visual);
-      RemoveLogicalChild(visual);
-    }
+//    private void RemoveVisual(Visual visual)
+//    {
+//      visuals.Remove(visual);
+//      RemoveVisualChild(visual);
+//      RemoveLogicalChild(visual);
+//    }
 
     private void ClearAll()
     {
@@ -109,13 +109,7 @@ namespace Labyrinthus.AidedCanvas
     /// </summary>
     private void DrawEdges()
     {
-      var wnd = (WindowMaster) Window.GetWindow(this);
-
-      if (null == wnd)
-      {
-        throw new InvalidOperationException(@"Не удалость найти главное окно приложения");
-      }
-
+      var wnd = (WindowMaster)Application.Current.MainWindow;
       var primitiveInfo = wnd.Primitive;
       double step = GetDrawStep(wnd);
       gridVisual = new DrawingVisual();
@@ -150,13 +144,7 @@ namespace Labyrinthus.AidedCanvas
 
     private void DrawPrimitives()
     {
-      var wnd = (WindowMaster) Window.GetWindow(this);
-
-      if (null == wnd)
-      {
-        return;
-      }
-
+      var wnd = (WindowMaster)Application.Current.MainWindow;
       var primitiveInfo = wnd.Primitive;
       double step = GetDrawStep(wnd);
       var primitiveVisual = new DrawingVisual();
@@ -198,12 +186,12 @@ namespace Labyrinthus.AidedCanvas
     /// <summary>
     /// тащим ли в данный момент примитив
     /// </summary>
-    private bool isDragPrimitive = false;
+    private bool isDragPrimitive;
 
     /// <summary>
     /// Позиция, за которую ухватили при перетаскивании примитив (относительно его края)
     /// </summary>
-    private Point primitiveHandlePoint = new Point(0, 0);
+//    private Point primitiveHandlePoint = new Point(0, 0);
 
     protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
     {   

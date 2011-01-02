@@ -102,12 +102,8 @@ namespace Labyrinthus.Pages
         return;
       }
 
-      var wnd = (WindowMaster)Window.GetWindow(this);
+      var wnd = (WindowMaster)Application.Current.MainWindow;
 
-      if (wnd == null)
-      {
-        return;
-      }
       if (wnd.Primitive.Width <= 0 || wnd.Primitive.Height <= 0)
       {
         return;
