@@ -4,13 +4,9 @@
       Title="PageShow3DLabyrinthus"
       Loaded="Page_Loaded">
 
-    <Grid>
+    <Grid Name="labyrinthusGrid" Focusable="True"
+          KeyDown="LabyrinthusViewport_KeyDown">
         <Viewport3D Name="LabyrinthusViewport" Width="500" Height="500">
-            <Viewport3D.Camera>
-                <PerspectiveCamera Position="-3,-3,5"
-                                   LookDirection="1,1.2,-1"
-                                   UpDirection="0,0,1"/>
-            </Viewport3D.Camera>
         </Viewport3D>
     </Grid>
 </Page>
