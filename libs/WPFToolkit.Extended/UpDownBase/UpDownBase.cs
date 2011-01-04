@@ -51,8 +51,8 @@ namespace Microsoft.Windows.Controls
 
         protected virtual void OnValueChanged(RoutedPropertyChangedEventArgs<T> e)
         {
-            if (ValueChanged != null)
-                ValueChanged(this, e);
+            e.RoutedEvent = ValueChangedEvent;
+            RaiseEvent(e);
         }
 
         #endregion //Value
@@ -311,10 +311,16 @@ namespace Microsoft.Windows.Controls
 
         #region Events
 
+        public static readonly RoutedEvent ValueChangedEvent = EventManager.RegisterRoutedEvent("ValueChanged", RoutingStrategy.Bubble, typeof(RoutedPropertyChangedEventHandler<T>), typeof(UpDownBase<T>));
+
         /// <summary>
         /// Occurs when Value property has changed.
         /// </summary>
-        public event RoutedPropertyChangedEventHandler<T> ValueChanged;
+        public event RoutedPropertyChangedEventHandler<T> ValueChanged
+        {
+          add { AddHandler(ValueChangedEvent, value); }
+          remove { RemoveHandler(ValueChangedEvent, value); }
+        }
 
         #endregion //Events
     }
