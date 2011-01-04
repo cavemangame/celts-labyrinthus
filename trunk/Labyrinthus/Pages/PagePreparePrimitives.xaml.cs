@@ -33,7 +33,7 @@ namespace Labyrinthus.Pages
       RefreshCanvas();
     }
 
-    private void Primitive_TextChanged(object sender, TextChangedEventArgs e)
+    private void Primitive_TextChanged(object sender, RoutedEventArgs e)
     {
       if (IsLoaded)
       {
