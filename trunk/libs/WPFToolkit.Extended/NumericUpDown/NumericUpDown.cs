@@ -106,6 +106,7 @@ namespace Microsoft.Windows.Controls
 
         protected override void OnValueChanged(RoutedPropertyChangedEventArgs<double> e)
         {
+            base.OnValueChanged(e);
             SetValidSpinDirection();
         }
 
