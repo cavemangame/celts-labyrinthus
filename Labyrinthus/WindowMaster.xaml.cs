@@ -10,7 +10,7 @@ namespace Labyrinthus
   /// </summary>
   public partial class WindowMaster
   {
-    private int CurrentPageNumber;
+    private int currentPageNumber;
     public PrimitiveInfo Primitive { get; private set; }
 
     public WindowMaster()
@@ -29,16 +29,20 @@ namespace Labyrinthus
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-      switch (CurrentPageNumber)
+      switch (currentPageNumber)
       {
         case 1:
-          CurrentPageNumber = 0;
+          currentPageNumber = 0;
           NavigateBack(@"Pages\PagePreparePrimitives.xaml");
           BackButton.Visibility = Visibility.Hidden;
           break;
         case 2:
-          CurrentPageNumber = 1;
+          currentPageNumber = 1;
           NavigateBack(@"Pages\PagePackPrimitives.xaml");
+          break;
+        case 3:
+          currentPageNumber = 2;
+          NavigateBack(@"Pages\PageShowLabyrinthus.xaml");
           break;
         default:
           throw new InvalidOperationException("Как-то умудрились нажать кнопку, хотя она невидима");
@@ -48,15 +52,19 @@ namespace Labyrinthus
 
     private void ForwardButton_Click(object sender, RoutedEventArgs e)
     {
-      switch (CurrentPageNumber)
+      switch (currentPageNumber)
       {
         case 0:
-          CurrentPageNumber = 1;
+          currentPageNumber = 1;
           NavigateForward(@"Pages\PagePackPrimitives.xaml");
           break;
         case 1:
-          CurrentPageNumber = 2;
+          currentPageNumber = 2;
           NavigateForward(@"Pages\PageShowLabyrinthus.xaml");
+          break;
+        case 2:
+          currentPageNumber = 3;
+          NavigateForward(@"Pages\PageShow3DLabyrinthus.xaml");
           ForwardButton.Visibility = Visibility.Collapsed;
           break;
         default:
