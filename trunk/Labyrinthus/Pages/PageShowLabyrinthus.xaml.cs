@@ -21,12 +21,12 @@ namespace Labyrinthus.Pages
     /// <summary>
     /// Сдвиг рисунка лабиринта по горизонати
     /// </summary>
-    private int xShift;
+    private double xShift;
 
     /// <summary>
     /// Сдвиг рисунка лабиринта по вертикали
     /// </summary>
-    private int yShift;
+    private double yShift;
 
     /// <summary>
     /// Начальная точка перемещения
@@ -117,14 +117,20 @@ namespace Labyrinthus.Pages
       }
 
       var moveEndPoint = e.MouseDevice.GetPosition(LabyrinthusImagePanel);
-      var wnd = (WindowMaster)Application.Current.MainWindow;
 
-      // TODO: остаток от деления должен учитывать поворот
-      xShift = (int)(xShift + moveEndPoint.X - moveStartPoint.X) % (wnd.Primitive.Width * Zoom);
-      yShift = (int)(yShift + moveEndPoint.Y - moveStartPoint.Y) % (wnd.Primitive.Height * Zoom);
+      xShift = xShift + moveEndPoint.X - moveStartPoint.X;
+      yShift = yShift + moveEndPoint.Y - moveStartPoint.Y;
 
       moveStartPoint = moveEndPoint;
       DrawBitmap();
+    }
+
+    private void LabyrinthusImagePanel_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+      var wnd = (WindowMaster)Application.Current.MainWindow;
+
+      xShift = xShift % (wnd.Primitive.Width * Zoom);
+      yShift = yShift % (wnd.Primitive.Height * Zoom);
     }
 
     private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
@@ -236,8 +242,8 @@ namespace Labyrinthus.Pages
       var totalPicWidth = visiblePicWidth * 3;
 
       // показываем только центральную часть
-      var visibleRect = new Int32Rect(totalPicWidth / 2 - visiblePicWidth / 2 - xShift,
-                                      totalPicHeight / 2 - visiblePicHeight / 2 - yShift,
+      var visibleRect = new Int32Rect(totalPicWidth / 2 - visiblePicWidth / 2 - (int)xShift,
+                                      totalPicHeight / 2 - visiblePicHeight / 2 - (int)yShift,
                                       visiblePicWidth, visiblePicHeight);
       var visibleImage = new CroppedBitmap(labirinthusBitmap, visibleRect);
 

@@ -35,20 +35,23 @@
                     Цвет пола:
                 </Label>
                 <Controls:ColorPicker Grid.Column="1" Grid.Row="2"
-                                        SelectedColor="{Binding FloorColor}" />
+                                      SelectedColor="{Binding FloorColor, Mode=OneTime}"
+                                      CurrentColor="{Binding FloorColor}" />
 
                 <Label Grid.Column="0" Grid.Row="3">
                     Цвет стен:
                 </Label>
                 <Controls:ColorPicker Grid.Column="1" Grid.Row="3"
-                                        SelectedColor="{Binding BorderColor}" />
+                                      SelectedColor="{Binding BorderColor, Mode=OneTime}"
+                                      CurrentColor="{Binding BorderColor}" />
             </Grid>
             <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SaveLabyrinthus">Сохранить</Button>
         </StackPanel>
         <StackPanel DockPanel.Dock="Left" Name="LabyrinthusImagePanel"
                     Width="600" Height="600"
                     MouseDown="LabyrinthusImagePanel_MouseDown"
-                    MouseMove="LabyrinthusImagePanel_MouseMove">
+                    MouseMove="LabyrinthusImagePanel_MouseMove"
+                    MouseUp="LabyrinthusImagePanel_MouseUp">
             <Image Name="LabyrinthusImage" HorizontalAlignment="Left" VerticalAlignment="Stretch"></Image>
         </StackPanel>
     </DockPanel>
