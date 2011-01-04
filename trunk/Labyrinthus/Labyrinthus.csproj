@@ -75,6 +75,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\PageShow3DLabyrinthus.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\PageShowLabyrinthus.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -106,6 +110,9 @@
     </Compile>
     <Compile Include="Pages\PagePreparePrimitives.xaml.cs">
       <DependentUpon>PagePreparePrimitives.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageShow3DLabyrinthus.xaml.cs">
+      <DependentUpon>PageShow3DLabyrinthus.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageShowLabyrinthus.xaml.cs">
       <DependentUpon>PageShowLabyrinthus.xaml</DependentUpon>
