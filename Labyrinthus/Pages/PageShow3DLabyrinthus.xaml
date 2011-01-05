@@ -1,9 +1,13 @@
 ﻿<Page x:Class="Labyrinthus.Pages.PageShow3DLabyrinthus"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:Controls="clr-namespace:Microsoft.Windows.Controls;assembly=WPFToolkit.Extended"
-      Title="PageShow3DLabyrinthus"
+      xmlns:Controls="clr-namespace:Microsoft.Windows.Controls;assembly=WPFToolkit.Extended" xmlns:Labyrinthus="clr-namespace:Labyrinthus" Title="PageShow3DLabyrinthus"
       Loaded="Page_Loaded">
+
+    <Page.Resources>
+        <Labyrinthus:Point3DDebugConverter x:Key="positionConverter" />
+        <Labyrinthus:Vector3DDebugConverter x:Key="lookDirectionConverter" />
+    </Page.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -11,16 +15,30 @@
             <ColumnDefinition Width="Auto" MinWidth="100" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Grid.Column="0"
-              Name="labyrinthusGrid" Focusable="True" KeyDown="LabyrinthusViewport_KeyDown">
-            <Viewport3D Name="LabyrinthusViewport" Width="500" Height="500" />
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <Label>
+                Для изменения положения камеры используйте WASD
+            </Label>
+            <Label>
+                Для изменения взгляда камеры используйте мышь с зажатой LMB
+            </Label>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Grid.Column="0" >
+            <Viewport3D Name="LabyrinthusViewport" Focusable="True"
+                        KeyDown="LabyrinthusGrid_KeyDown"
+                        MouseDown="labyrinthusGrid_MouseDown"
+                        MouseMove="labyrinthusGrid_MouseMove" />
         </Grid>
 
-        <Grid Grid.Row="0" Grid.Column="1">
+        <Grid Grid.Row="1" Grid.Column="1">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -29,7 +47,7 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" MinWidth="50"/>
+                <ColumnDefinition Width="*" MinWidth="100"/>
             </Grid.ColumnDefinitions>
 
             <Label Grid.Column="0" Grid.Row="0">
@@ -57,15 +75,31 @@
                 Цвет пола:
             </Label>
             <Controls:ColorPicker Grid.Column="1" Grid.Row="3" Focusable="False"
-                                      SelectedColor="{Binding FloorBrush.Color, Mode=OneTime}"
-                                      CurrentColor="{Binding FloorBrush.Color}" />
+                                  SelectedColor="{Binding FloorBrush.Color, Mode=OneTime}"
+                                  CurrentColor="{Binding FloorBrush.Color}"
+                                  SelectedColorChanged="ColorPicker_SelectedColorChanged" />
 
             <Label Grid.Column="0" Grid.Row="4">
                 Цвет стен:
             </Label>
             <Controls:ColorPicker Grid.Column="1" Grid.Row="4" Focusable="False"
-                                      SelectedColor="{Binding PrimitiveEdgeBrush.Color, Mode=OneTime}"
-                                      CurrentColor="{Binding PrimitiveEdgeBrush.Color}" />
+                                  SelectedColor="{Binding PrimitiveEdgeBrush.Color, Mode=OneTime}"
+                                  CurrentColor="{Binding PrimitiveEdgeBrush.Color}"
+                                  SelectedColorChanged="ColorPicker_SelectedColorChanged" />
+
+            <Label Grid.Column="0" Grid.Row="5">
+                Camera pos:
+            </Label>
+            <Label Grid.Column="1" Grid.Row="5"
+                   Content="{Binding Camera.Position, Mode=OneWay,
+                             Converter={StaticResource positionConverter}}" />
+
+            <Label Grid.Column="0" Grid.Row="6">
+                Camera look:
+            </Label>
+            <Label Grid.Column="1" Grid.Row="6"
+                   Content="{Binding Camera.LookDirection, Mode=OneWay,
+                             Converter={StaticResource lookDirectionConverter}}" />
         </Grid>
     </Grid>
 </Page>

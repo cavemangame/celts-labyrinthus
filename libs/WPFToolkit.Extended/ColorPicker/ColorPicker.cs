@@ -59,6 +59,15 @@ namespace Microsoft.Windows.Controls
         {
             ColorPicker colorPicker = (ColorPicker)d;
             colorPicker.SetSelectedColor((Color)e.NewValue);
+
+            colorPicker.OnSelectedColorChanged();
+        }
+
+        protected void OnSelectedColorChanged()
+        {
+          var args = new RoutedEventArgs {RoutedEvent = SelectedColorChangedEvent};
+
+          RaiseEvent(args);
         }
 
         #endregion //SelectedColor
@@ -391,5 +400,21 @@ namespace Microsoft.Windows.Controls
         }
 
         #endregion //Methods
+
+        #region Events
+
+        public static readonly RoutedEvent SelectedColorChangedEvent =
+          EventManager.RegisterRoutedEvent("SelectedColorChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ColorPicker));
+
+        /// <summary>
+        /// Occurs when Value property has changed.
+        /// </summary>
+        public event RoutedEventHandler SelectedColorChanged
+        {
+          add { AddHandler(SelectedColorChangedEvent, value); }
+          remove { RemoveHandler(SelectedColorChangedEvent, value); }
+        }
+
+        #endregion //Events
     }
 }
