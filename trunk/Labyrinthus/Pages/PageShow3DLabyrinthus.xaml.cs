@@ -7,7 +7,6 @@ using Labyrinthus.Objects;
 
 namespace Labyrinthus.Pages
 {
-  // TODO: растянуть viewpoet
   public partial class PageShow3DLabyrinthus
   {
     #region Константы
@@ -18,10 +17,6 @@ namespace Labyrinthus.Pages
     #endregion
 
     #region Поля
-    /// <summary>
-    /// Камера
-    /// </summary>
-    private PerspectiveCamera labirunthusCamera;
     /// <summary>
     /// Материал для пола
     /// </summary>
@@ -36,6 +31,11 @@ namespace Labyrinthus.Pages
     /// Материал для стен лабиринта
     /// </summary>
     private readonly DiffuseMaterial debugMaterial;
+
+    /// <summary>
+    /// Начальное положение мыши перед изменением взгляда камеры
+    /// </summary>
+    private Point moveLookStartPoint;
     #endregion
 
     #region Свойства
@@ -63,6 +63,11 @@ namespace Labyrinthus.Pages
     /// Кисть для стен лабиринта
     /// </summary>
     public SolidColorBrush PrimitiveEdgeBrush { get; set; }
+
+    /// <summary>
+    /// Камера
+    /// </summary>
+    public PerspectiveCamera Camera { get; private set; }
     #endregion
 
     #region Конструктор
@@ -81,6 +86,8 @@ namespace Labyrinthus.Pages
 
       debugMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Green));
 
+      InitCamera();
+
       DataContext = this;
     }
     #endregion
@@ -88,7 +95,6 @@ namespace Labyrinthus.Pages
     #region Обработка событий
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-      InitCamera();
       DrawLabyrinthus();
     }
 
@@ -99,35 +105,113 @@ namespace Labyrinthus.Pages
     }
 
 
-    private void LabyrinthusViewport_KeyDown(object sender, KeyEventArgs e)
+    private void ColorPicker_SelectedColorChanged(object sender, RoutedEventArgs e)
     {
-      // TODO: проблема с установкой фокуса
+      LabyrinthusViewport.Focus();
+    }
 
-      var pos = labirunthusCamera.Position;
-      var look = labirunthusCamera.LookDirection;
-      var maxLook = Math.Max(Math.Max(look.X, look.Y), look.Z);
+
+    private void LabyrinthusGrid_KeyDown(object sender, KeyEventArgs e)
+    {
+      var pos = Camera.Position;
+      var look = Camera.LookDirection;
+      var maxLook = Math.Max(
+        Math.Max(Math.Abs(look.X), Math.Abs(look.Y)), Math.Abs(look.Z));
+      var productLook = Vector3D.CrossProduct(Camera.LookDirection, Camera.UpDirection);
+      var maxProductLook = Math.Max(
+        Math.Max(Math.Abs(productLook.X), Math.Abs(productLook.Y)), Math.Abs(productLook.Z));
+
       Point3D newPos;
 
       switch (e.Key)
       {
-        case Key.Up:
+//        case Key.Up:
         case Key.W:
           newPos = new Point3D(pos.X + look.X / maxLook,
                                pos.Y + look.Y / maxLook,
                                pos.Z + look.Z / maxLook);
           break;
-        case Key.Down:
+//        case Key.Down:
         case Key.S:
           newPos = new Point3D(pos.X - look.X / maxLook,
                                pos.Y - look.Y / maxLook,
                                pos.Z - look.Z / maxLook);
           break;
+//        case Key.Left:
+        case Key.A:
+          newPos = new Point3D(pos.X - productLook.X / maxProductLook,
+                               pos.Y - productLook.Y / maxProductLook,
+                               pos.Z - productLook.Z / maxProductLook);
+          break;
+//        case Key.Right:
+        case Key.D:
+          newPos = new Point3D(pos.X + productLook.X / maxProductLook,
+                               pos.Y + productLook.Y / maxProductLook,
+                               pos.Z + productLook.Z / maxProductLook);
+          break;
         default:
-          newPos = new Point3D(pos.X, pos.Y, pos.Z);
+          newPos = pos;
           break;
       }
 
-      labirunthusCamera.Position = newPos;
+      if (newPos.Z <= 0)
+      {
+        newPos = pos;
+      }
+
+      Camera.Position = newPos;
+    }
+
+
+    private void labyrinthusGrid_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+      // начало вращения камеры
+      moveLookStartPoint = e.MouseDevice.GetPosition(LabyrinthusViewport);
+    }
+
+
+    private void labyrinthusGrid_MouseMove(object sender, MouseEventArgs e)
+    {
+      if (e.LeftButton != MouseButtonState.Pressed)
+      {
+        return;
+      }
+
+      var moveLookEndPoint = e.MouseDevice.GetPosition(LabyrinthusViewport);
+      var xShift = moveLookEndPoint.X - moveLookStartPoint.X;
+      var xAngle = - Math.PI * xShift / LabyrinthusViewport.ActualWidth;
+      var yShift = moveLookEndPoint.Y - moveLookStartPoint.Y;
+      var yAngle = Math.PI / 2 * yShift / LabyrinthusViewport.ActualHeight;
+      var look = Camera.LookDirection;
+      var newLook = new Vector3D(look.X, look.Y, look.Z);
+
+      // поворот влево-вправо
+      if (xAngle != 0)
+      {
+        var x = newLook.X * Math.Cos(xAngle) + newLook.Y * Math.Sin(xAngle);
+        var y = - newLook.X * Math.Sin(xAngle) + newLook.Y * Math.Cos(xAngle);
+
+        newLook.X = x;
+        newLook.Y = y;
+      }
+
+      // поворот вверх-вниз
+      if (yAngle != 0)
+      {
+        var xy = Math.Sqrt(Math.Pow(newLook.X, 2) + Math.Pow(newLook.Y, 2));
+        var curZAngle = Math.Atan(Math.Abs(newLook.Z) / xy);
+        var newZAngle = curZAngle + yAngle * Math.Sign(newLook.Z);
+
+        if (Math.Abs(newZAngle) < 85d * Math.PI / 180d)
+        {
+          var z = Math.Tan(newZAngle) * xy * Math.Sign(newLook.Z);
+
+          newLook.Z = z;
+        }
+      }
+
+      Camera.LookDirection = newLook;
+      moveLookStartPoint = moveLookEndPoint;
     }
     #endregion
 
@@ -155,20 +239,20 @@ namespace Labyrinthus.Pages
       labyrinthusModelVisual.Content = labyrinthusModelGroup;
       LabyrinthusViewport.Children.Add(labyrinthusModelVisual);
 
-      labyrinthusGrid.Focus();
+      LabyrinthusViewport.Focus();
     }
 
 
     private void InitCamera()
     {
-      labirunthusCamera = new PerspectiveCamera
+      Camera = new PerspectiveCamera
       {
         Position = new Point3D(-17, -20, 19),
         LookDirection = new Vector3D(1, 1.2, -1),
         UpDirection = new Vector3D(0, 0, 1)
       };
 
-      LabyrinthusViewport.Camera = labirunthusCamera;
+      LabyrinthusViewport.Camera = Camera;
     }
 
 
@@ -187,8 +271,8 @@ namespace Labyrinthus.Pages
     private void DrawFloor(Model3DGroup labyrinthusModelGroup)
     {
       var wnd = (WindowMaster)Application.Current.MainWindow;
-      var xSize = wnd.Primitive.Width * ZOOM * LabyrinthusSize;
-      var ySize = wnd.Primitive.Height * ZOOM * LabyrinthusSize;
+      var xSize = wnd.Primitive.Width * ZOOM * LabyrinthusSize * 10;
+      var ySize = wnd.Primitive.Height * ZOOM * LabyrinthusSize * 10;
 
       var floorPositions = new Point3DCollection
       {
