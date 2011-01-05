@@ -1,12 +1,71 @@
 ﻿<Page x:Class="Labyrinthus.Pages.PageShow3DLabyrinthus"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:Controls="clr-namespace:Microsoft.Windows.Controls;assembly=WPFToolkit.Extended"
       Title="PageShow3DLabyrinthus"
       Loaded="Page_Loaded">
 
-    <Grid Name="labyrinthusGrid" Focusable="True"
-          KeyDown="LabyrinthusViewport_KeyDown">
-        <Viewport3D Name="LabyrinthusViewport" Width="500" Height="500">
-        </Viewport3D>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" MinWidth="100" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Grid.Column="0"
+              Name="labyrinthusGrid" Focusable="True" KeyDown="LabyrinthusViewport_KeyDown">
+            <Viewport3D Name="LabyrinthusViewport" Width="500" Height="500" />
+        </Grid>
+
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="50"/>
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0" Grid.Row="0">
+                Размер:
+            </Label>
+            <Controls:NumericUpDown Grid.Column="1" Grid.Row="0" Focusable="False"
+                                    Value="{Binding LabyrinthusSize, UpdateSourceTrigger=PropertyChanged}"
+                                    Minimum="1" ValueChanged="LabyrinthusParams_Changed" />
+
+            <Label Grid.Column="0" Grid.Row="1">
+                Ширина стен:
+            </Label>
+            <Controls:NumericUpDown Grid.Column="1" Grid.Row="1" Focusable="False"
+                                    Value="{Binding EdgeWidth, UpdateSourceTrigger=PropertyChanged}"
+                                    Minimum="0" ValueChanged="LabyrinthusParams_Changed" />
+
+            <Label Grid.Column="0" Grid.Row="2">
+                Высота стен:
+            </Label>
+            <Controls:NumericUpDown Grid.Column="1" Grid.Row="2" Focusable="False"
+                                    Value="{Binding EdgeHeight, UpdateSourceTrigger=PropertyChanged}"
+                                    Minimum="1" ValueChanged="LabyrinthusParams_Changed" />
+
+            <Label Grid.Column="0" Grid.Row="3">
+                Цвет пола:
+            </Label>
+            <Controls:ColorPicker Grid.Column="1" Grid.Row="3" Focusable="False"
+                                      SelectedColor="{Binding FloorBrush.Color, Mode=OneTime}"
+                                      CurrentColor="{Binding FloorBrush.Color}" />
+
+            <Label Grid.Column="0" Grid.Row="4">
+                Цвет стен:
+            </Label>
+            <Controls:ColorPicker Grid.Column="1" Grid.Row="4" Focusable="False"
+                                      SelectedColor="{Binding PrimitiveEdgeBrush.Color, Mode=OneTime}"
+                                      CurrentColor="{Binding PrimitiveEdgeBrush.Color}" />
+        </Grid>
     </Grid>
 </Page>

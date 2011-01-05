@@ -7,6 +7,7 @@ using Labyrinthus.Objects;
 
 namespace Labyrinthus.Pages
 {
+  // TODO: растянуть viewpoet
   public partial class PageShow3DLabyrinthus
   {
     #region Константы
@@ -34,10 +35,15 @@ namespace Labyrinthus.Pages
     /// <summary>
     /// Материал для стен лабиринта
     /// </summary>
-    private readonly DiffuseMaterial debugMaterial; // TODO: удалить после отдалки
+    private readonly DiffuseMaterial debugMaterial;
     #endregion
 
     #region Свойства
+    /// <summary>
+    /// Размер лабиринта
+    /// </summary>
+    public int LabyrinthusSize { get; set; }
+
     /// <summary>
     /// Толщина стен лабиринта
     /// </summary>
@@ -47,6 +53,16 @@ namespace Labyrinthus.Pages
     /// Высота стен лабиринта
     /// </summary>
     public int EdgeHeight { get; set; }
+
+    /// <summary>
+    /// Кисть для пола
+    /// </summary>
+    public SolidColorBrush FloorBrush { get; set; }
+
+    /// <summary>
+    /// Кисть для стен лабиринта
+    /// </summary>
+    public SolidColorBrush PrimitiveEdgeBrush { get; set; }
     #endregion
 
     #region Конструктор
@@ -54,17 +70,30 @@ namespace Labyrinthus.Pages
     {
       InitializeComponent();
 
+      LabyrinthusSize = 4;
       EdgeWidth = 1;
       EdgeHeight = 4;
+      FloorBrush = new SolidColorBrush(Colors.Red);
+      PrimitiveEdgeBrush = new SolidColorBrush(Colors.Gray);
 
-      floorMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Red));
-      primitiveEdgeMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.White));
+      floorMaterial = new DiffuseMaterial(FloorBrush);
+      primitiveEdgeMaterial = new DiffuseMaterial(PrimitiveEdgeBrush);
+
       debugMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Green));
+
+      DataContext = this;
     }
     #endregion
 
     #region Обработка событий
     private void Page_Loaded(object sender, RoutedEventArgs e)
+    {
+      InitCamera();
+      DrawLabyrinthus();
+    }
+
+
+    private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
     {
       DrawLabyrinthus();
     }
@@ -72,6 +101,8 @@ namespace Labyrinthus.Pages
 
     private void LabyrinthusViewport_KeyDown(object sender, KeyEventArgs e)
     {
+      // TODO: проблема с установкой фокуса
+
       var pos = labirunthusCamera.Position;
       var look = labirunthusCamera.LookDirection;
       var maxLook = Math.Max(Math.Max(look.X, look.Y), look.Z);
@@ -80,11 +111,13 @@ namespace Labyrinthus.Pages
       switch (e.Key)
       {
         case Key.Up:
+        case Key.W:
           newPos = new Point3D(pos.X + look.X / maxLook,
                                pos.Y + look.Y / maxLook,
                                pos.Z + look.Z / maxLook);
           break;
         case Key.Down:
+        case Key.S:
           newPos = new Point3D(pos.X - look.X / maxLook,
                                pos.Y - look.Y / maxLook,
                                pos.Z - look.Z / maxLook);
@@ -107,13 +140,12 @@ namespace Labyrinthus.Pages
       var labyrinthusModelGroup = new Model3DGroup();
       var labyrinthusGeometryModel = new GeometryModel3D();
 
-      AddCamera();
       AddLight(labyrinthusModelGroup);
       DrawFloor(labyrinthusModelGroup);
 
-      for (int x = -3; x < 4; x++)
+      for (int x = -LabyrinthusSize; x < LabyrinthusSize; x++)
       {
-        for (int y = -3; y < 4; y++)
+        for (int y = -LabyrinthusSize; y < LabyrinthusSize; y++)
         {
           DrawPrimitive(labyrinthusModelGroup, x, y);
         }
@@ -127,11 +159,11 @@ namespace Labyrinthus.Pages
     }
 
 
-    private void AddCamera()
+    private void InitCamera()
     {
       labirunthusCamera = new PerspectiveCamera
       {
-        Position = new Point3D(-3, -3, 5),
+        Position = new Point3D(-17, -20, 19),
         LookDirection = new Vector3D(1, 1.2, -1),
         UpDirection = new Vector3D(0, 0, 1)
       };
@@ -154,15 +186,18 @@ namespace Labyrinthus.Pages
 
     private void DrawFloor(Model3DGroup labyrinthusModelGroup)
     {
-      // TODO: сделать нормальный пол
+      var wnd = (WindowMaster)Application.Current.MainWindow;
+      var xSize = wnd.Primitive.Width * ZOOM * LabyrinthusSize;
+      var ySize = wnd.Primitive.Height * ZOOM * LabyrinthusSize;
+
       var floorPositions = new Point3DCollection
       {
-        new Point3D(-100, -100, 0),
-        new Point3D( 100, -100, 0),
-        new Point3D(-100,  100, 0),
-        new Point3D( 100, -100, 0),
-        new Point3D(-100,  100, 0),
-        new Point3D( 100,  100, 0),
+        new Point3D(-xSize, -ySize, 0),
+        new Point3D( xSize, -ySize, 0),
+        new Point3D(-xSize,  ySize, 0),
+        new Point3D( xSize, -ySize, 0),
+        new Point3D(-xSize,  ySize, 0),
+        new Point3D( xSize,  ySize, 0),
       };
 
       var floorIndices = new Int32Collection
