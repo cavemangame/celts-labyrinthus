@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -14,7 +15,7 @@ namespace Labyrinthus.Pages
   public partial class PageShowLabyrinthus
   {
     #region Поля
-    private Brush floorBrush;
+    private DrawingBrush floorDrawingBrush;
     private Brush primitiveBorderBrush;
     private Pen primitiveBorderPen;
 
@@ -52,16 +53,17 @@ namespace Labyrinthus.Pages
     public int RotateAngle { get; set; }
 
     /// <summary>
-    /// Цвет пола. Задается в ColorPicker.
+    /// Кисть для заливки пола. Цвет задается в ColorPicker.
     /// </summary>
-    public Color FloorColor
+    public SolidColorBrush FloorSolidColorBrush
     {
-      get { return (Color)GetValue(FloorColorProperty); }
-      set { SetValue(FloorColorProperty, value); }
+      get { return (SolidColorBrush)GetValue(FloorSolidColorBrushProperty); }
+      set { SetValue(FloorSolidColorBrushProperty, value); }
     }
-    public static readonly DependencyProperty FloorColorProperty = DependencyProperty.Register(
-      "FloorColor", typeof(Color), typeof(PageShowLabyrinthus),
-      new FrameworkPropertyMetadata(Colors.Brown, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+    public static readonly DependencyProperty FloorSolidColorBrushProperty = DependencyProperty.Register(
+      "FloorSolidColorBrush", typeof(SolidColorBrush), typeof(PageShowLabyrinthus),
+      new FrameworkPropertyMetadata(null,
+                                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                                     SelectedColorPropertyChanged));
 
     /// <summary>
@@ -93,7 +95,19 @@ namespace Labyrinthus.Pages
 
       Zoom = 10;
       RotateAngle = 0;
-      FloorColor = Colors.Brown;
+      FloorSolidColorBrush = new SolidColorBrush(Colors.Brown);
+
+      var imageSource = new BitmapImage(
+        new Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"res\\FloorTexture1.png"),
+                UriKind.Absolute));
+      var drawing = new ImageDrawing
+      {
+        ImageSource = imageSource,
+        Rect = new Rect(0, 0, 1000, 100)
+      };
+
+      floorDrawingBrush = new DrawingBrush(drawing);
+
       BorderColor = Colors.Black;
 
       DataContext = this;
@@ -135,8 +149,40 @@ namespace Labyrinthus.Pages
 
     private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
     {
-      xShift = yShift = 0;
       DrawLabyrinthus();
+    }
+
+    private void BrowseFloorImageButton_Click(object sender, RoutedEventArgs e)
+    {
+      var dlg = new OpenFileDialog
+      {
+        DefaultExt = ".png",
+        Filter = "Текстуры (.png)|*.png"
+      };
+
+      var result = dlg.ShowDialog();
+
+      if (result == true)
+      {
+        var imageSource = new BitmapImage(new Uri(dlg.FileName, UriKind.Absolute));
+        var drawing = new ImageDrawing
+        {
+          ImageSource = imageSource,
+          Rect = new Rect(0, 0, 100, 100)
+        };
+
+        floorDrawingBrush = new DrawingBrush(drawing);
+
+        if (FloorDrawingBrushButton.IsChecked == true)
+        {
+          DrawLabyrinthus();
+        }
+      }
+    }
+
+    private void BrowseBorderImageButton_Click(object sender, RoutedEventArgs e)
+    {
+      // TODO: implement
     }
 
     private void SaveLabyrinthus(object sender, RoutedEventArgs e)
@@ -182,7 +228,6 @@ namespace Labyrinthus.Pages
 
       primitiveBorderBrush = new SolidColorBrush(BorderColor);
       primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
-      floorBrush = new SolidColorBrush(FloorColor);
 
       // видимая часть рисунка
       var visiblePicHeight = (int)LabyrinthusImagePanel.Height;
@@ -200,7 +245,9 @@ namespace Labyrinthus.Pages
       var drawingVisual = new DrawingVisual();
       DrawingContext dc = drawingVisual.RenderOpen();
 
-      dc.DrawRectangle(floorBrush, null, new Rect(0, 0, totalPicWidth, totalPicHeight));
+      dc.DrawRectangle(
+        (true == FloorSolidColorBrushButton.IsChecked) ? (Brush)FloorSolidColorBrush : floorDrawingBrush,
+        null, new Rect(0, 0, totalPicWidth, totalPicHeight));
       for (int i = 0; i < wCount; i++)
       {
         // на каждый примитив - медленней, на всё - медленней

@@ -13,6 +13,10 @@
                     <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -35,16 +39,46 @@
                 <Label Grid.Column="0" Grid.Row="2">
                     Цвет пола:
                 </Label>
-                <Controls:ColorPicker Grid.Column="1" Grid.Row="2"
-                                      SelectedColor="{Binding FloorColor, Mode=OneTime}"
-                                      CurrentColor="{Binding FloorColor}" />
+                <RadioButton Grid.Column="0" Grid.Row="3"
+                             IsChecked="True" VerticalAlignment="Center"
+                             GroupName="FloorBrushType" Name="FloorSolidColorBrushButton"
+                             Checked="LabyrinthusParams_Changed">
+                    Заливка:
+                </RadioButton>
+                <Controls:ColorPicker Grid.Column="1" Grid.Row="3"
+                                      SelectedColor="{Binding FloorSolidColorBrush.Color, Mode=OneTime}"
+                                      CurrentColor="{Binding FloorSolidColorBrush.Color}" />
+                <RadioButton Grid.Column="0" Grid.Row="4"
+                             VerticalAlignment="Center"
+                             GroupName="FloorBrushType" Name="FloorDrawingBrushButton"
+                             Checked="LabyrinthusParams_Changed">
+                    Текстура:
+                </RadioButton>
+                <Button Grid.Column="1" Grid.Row="4"
+                        Content="Выбрать..."
+                        Click="BrowseFloorImageButton_Click" />
 
-                <Label Grid.Column="0" Grid.Row="3">
+                <Label Grid.Column="0" Grid.Row="5">
                     Цвет стен:
                 </Label>
-                <Controls:ColorPicker Grid.Column="1" Grid.Row="3"
+                <RadioButton Grid.Column="0" Grid.Row="6"
+                             IsChecked="True" VerticalAlignment="Center"
+                             GroupName="BorderBrushType" Name="BorderSolidColorBrushButton"
+                             Checked="LabyrinthusParams_Changed">
+                    Заливка:
+                </RadioButton>
+                <Controls:ColorPicker Grid.Column="1" Grid.Row="6"
                                       SelectedColor="{Binding BorderColor, Mode=OneTime}"
                                       CurrentColor="{Binding BorderColor}" />
+                <RadioButton Grid.Column="0" Grid.Row="7"
+                             VerticalAlignment="Center"
+                             GroupName="BorderBrushType" Name="BorderDrawingBrushButton"
+                             Checked="LabyrinthusParams_Changed">
+                    Текстура:
+                </RadioButton>
+                <Button Grid.Column="1" Grid.Row="7"
+                        Content="Выбрать..."
+                        Click="BrowseBorderImageButton_Click" />
             </Grid>
             <Button Margin="0,2,0,0" HorizontalAlignment="Center" Click="SaveLabyrinthus">Сохранить</Button>
         </StackPanel>
