@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using Labyrinthus.Objects;
 
 namespace Labyrinthus.AidedCanvas
 {
@@ -15,6 +17,9 @@ namespace Labyrinthus.AidedCanvas
     /// </summary>
     private readonly List<Visual> visuals = new List<Visual>();
 
+    /// <summary>
+    /// Отдельный вижуал сетки
+    /// </summary>
     private DrawingVisual gridVisual;
 
     /// <summary>
@@ -28,12 +33,16 @@ namespace Labyrinthus.AidedCanvas
     /// </summary>
     private const int CELLS_COUNT_KOEF = 3;
 
+    private readonly Dictionary<PrimitiveInfo, GridPoint> primitives = new Dictionary<PrimitiveInfo, GridPoint>();
+
     #endregion
 
     #region Ресурсы
  
     private readonly Brush edgeBrush = new SolidColorBrush(Colors.LightGray);
     private readonly Pen edgePen;
+    private readonly Brush primitiveSlideBrush = new SolidColorBrush(Colors.AntiqueWhite);
+    private readonly Pen primitiveSlidePen;
     private readonly Brush primitiveBorderBrush = new SolidColorBrush(Colors.Black);
     private readonly Pen primitiveBorderPen;
 
@@ -45,6 +54,15 @@ namespace Labyrinthus.AidedCanvas
     {
       edgePen = new Pen(edgeBrush, 1.0);
       primitiveBorderPen = new Pen(primitiveBorderBrush, 1.0);
+
+      primitiveSlideBrush.Opacity = 0.25;
+      primitiveSlidePen = new Pen(primitiveBorderBrush, 0.3) { DashStyle = DashStyles.Dash };
+
+      var wnd = (WindowMaster) Application.Current.MainWindow;
+      if (wnd != null)
+      {
+        primitives.Add(wnd.Primitive, new GridPoint(0, 0));
+      }
     }
 
     #endregion
@@ -72,12 +90,12 @@ namespace Labyrinthus.AidedCanvas
       AddLogicalChild(visual);
     }
 
-//    private void RemoveVisual(Visual visual)
-//    {
-//      visuals.Remove(visual);
-//      RemoveVisualChild(visual);
-//      RemoveLogicalChild(visual);
-//    }
+    private void RemoveVisual(Visual visual)
+    {
+      visuals.Remove(visual);
+      RemoveVisualChild(visual);
+      RemoveLogicalChild(visual);
+    }
 
     private void ClearAll()
     {
@@ -109,15 +127,13 @@ namespace Labyrinthus.AidedCanvas
     /// </summary>
     private void DrawEdges()
     {
-      var wnd = (WindowMaster)Application.Current.MainWindow;
-      var primitiveInfo = wnd.Primitive;
-      double step = GetDrawStep(wnd);
+      double step = GetDrawStep();
       gridVisual = new DrawingVisual();
 
       using (DrawingContext dc = gridVisual.RenderOpen())
       {
-        int width = primitiveInfo.Width*CELLS_COUNT_KOEF;
-        int height = primitiveInfo.Height*CELLS_COUNT_KOEF;
+        int width = GetMaxWidth()*CELLS_COUNT_KOEF;
+        int height = GetMaxHeigth()*CELLS_COUNT_KOEF;
         for (int i = 0; i <= width; i++)
         {
           for (int j = 0; j <= height; j++)
@@ -144,19 +160,31 @@ namespace Labyrinthus.AidedCanvas
 
     private void DrawPrimitives()
     {
-      var wnd = (WindowMaster)Application.Current.MainWindow;
-      var primitiveInfo = wnd.Primitive;
-      double step = GetDrawStep(wnd);
+      foreach (KeyValuePair<PrimitiveInfo, GridPoint> primitive in primitives)
+      {
+        DrawPrimitive(primitive.Value, primitive.Key, GetDrawStep());
+      }
+    }
+
+
+    private void DrawPrimitive(GridPoint corner, PrimitiveInfo primitiveInfo, double step)
+    {
       var primitiveVisual = new DrawingVisual();
 
       // рисуем примитив в одном вижуале, чтоб работать с ним далее как с единым целым
       using (DrawingContext dc = primitiveVisual.RenderOpen())
       {
+        dc.DrawRectangle(primitiveSlideBrush, primitiveSlidePen,
+                         new Rect(corner.X*step + SHIFT_FROM_BORDER, corner.Y*step + SHIFT_FROM_BORDER,
+                                  primitiveInfo.Width*step, primitiveInfo.Height*step));
+
         foreach (var lineInfo in primitiveInfo.Lines)
         {
           dc.DrawLine(primitiveBorderPen,
-                      new Point(lineInfo.X0*step + SHIFT_FROM_BORDER, lineInfo.Y0*step + SHIFT_FROM_BORDER),
-                      new Point(lineInfo.X1*step + SHIFT_FROM_BORDER, lineInfo.Y1*step + SHIFT_FROM_BORDER));
+                      new Point((lineInfo.X0 + corner.X)*step + SHIFT_FROM_BORDER,
+                                (lineInfo.Y0 + corner.Y)*step + SHIFT_FROM_BORDER),
+                      new Point((lineInfo.X1 + corner.X)*step + SHIFT_FROM_BORDER,
+                                (lineInfo.Y1 + corner.Y)*step + SHIFT_FROM_BORDER));
         }
       }
       AddVisual(primitiveVisual);
@@ -169,14 +197,46 @@ namespace Labyrinthus.AidedCanvas
     /// <summary>
     /// Выдаем размер клетки для сетки. Здесь учитываем коэффициент (3) для свободной манипуляции примитивами
     /// </summary>
-    private double GetDrawStep(WindowMaster wnd)
+    private double GetDrawStep()
     {
-      var primitiveInfo = wnd.Primitive;
-      int cells = CELLS_COUNT_KOEF * Math.Max(primitiveInfo.Height, primitiveInfo.Width);
-      double step = Math.Min((ActualHeight - 2 * SHIFT_FROM_BORDER) / cells,
-                             (ActualWidth - 2 * SHIFT_FROM_BORDER) / cells);
+      double step = double.MaxValue;
+      foreach (PrimitiveInfo primitiveInfo in primitives.Keys)
+      {
+        int cells = CELLS_COUNT_KOEF * Math.Max(primitiveInfo.Height, primitiveInfo.Width);
+        step = Math.Min(step, Math.Min((ActualHeight - 2 * SHIFT_FROM_BORDER) / cells,
+                             (ActualWidth - 2 * SHIFT_FROM_BORDER) / cells));
 
+      }
       return step;
+    }
+
+    private int GetMaxWidth()
+    {
+      int width = 5;
+      foreach (PrimitiveInfo primitiveInfo in primitives.Keys)
+      {
+        width = Math.Max(width, primitiveInfo.Width);
+      }
+      return width; 
+    }
+
+     private int GetMaxHeigth()
+     {
+       int height = 5;
+       foreach (PrimitiveInfo primitiveInfo in primitives.Keys)
+       {
+         height = Math.Max(height, primitiveInfo.Height);
+       }
+       return height;
+     }
+
+    private GridPoint ConvertToGridPoint(Point pt)
+    {
+      double step = GetDrawStep();
+      var x = (int)((pt.X - SHIFT_FROM_BORDER) / step);
+      var y = (int)((pt.Y - SHIFT_FROM_BORDER) / step);
+      // пока левоверх
+      return new GridPoint(x, y);
     }
 
     #endregion
@@ -186,31 +246,116 @@ namespace Labyrinthus.AidedCanvas
     /// <summary>
     /// тащим ли в данный момент примитив
     /// </summary>
-    private bool isDragPrimitive;
-
+    private bool isDraggingPrimitive;
     /// <summary>
     /// Позиция, за которую ухватили при перетаскивании примитив (относительно его края)
     /// </summary>
-//    private Point primitiveHandlePoint = new Point(0, 0);
+    private Vector clickOffset = new Vector(0, 0);
 
-    protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+    private Point draggedPoint = new Point(0, 0);
+    /// <summary>
+    /// Текущий двигающийся вижуал
+    /// </summary>
+    private DrawingVisual selectedVisual = null;
+
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {   
-      if (!isDragPrimitive)
+      if (!isDraggingPrimitive)
       {
-        //CatchPrimitive(e.GetPosition(this));
-        isDragPrimitive = true;
+        CatchPrimitive(e.GetPosition(this));
       }
-      base.OnMouseLeftButtonDown(e);
     }
 
-    protected override void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
-      if (isDragPrimitive)
+      if (isDraggingPrimitive)
       {
-        //PutPrimitive(e.GetPosition(this));
-        isDragPrimitive = false;
+        PutPrimitive(e.GetPosition(this));
       }
-      base.OnMouseLeftButtonUp(e);
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+      if (e.LeftButton != MouseButtonState.Pressed)
+      {
+        SetCursorState(e.GetPosition(this));
+      }
+      if (isDraggingPrimitive)
+      {
+        MovePrimitive(e.GetPosition(this));
+      }
+    }
+
+    private void MovePrimitive(Point pt)
+    {
+      draggedPoint = pt + clickOffset;
+      var move = new TranslateTransform(draggedPoint.X, draggedPoint.Y);
+      selectedVisual.Transform = move;
+    }
+
+    private void CatchPrimitive(Point pointClicked)
+    {
+      var visual = GetVisual(pointClicked);
+      if (visual != null && visual != gridVisual)
+      {
+        var topLeftCorner = new Point(
+          visual.ContentBounds.TopLeft.X + edgePen.Thickness/2,
+          visual.ContentBounds.TopLeft.Y + edgePen.Thickness/2);
+
+        clickOffset = topLeftCorner - pointClicked;
+
+        AddDraggingVisual(visual);
+        Cursor = Cursors.Hand;
+        isDraggingPrimitive = true;
+      }
+    }
+
+    private void PutPrimitive(Point pt)
+    {
+      if (selectedVisual != null)
+      {
+        RemoveVisual(selectedVisual);
+        //GetPrimitivePair(selectedVisual) = ConvertToGridPoint(pt);
+      }
+      selectedVisual = null;
+      isDraggingPrimitive = false;
+      Cursor = Cursors.Arrow;
+    }
+
+
+    private void SetCursorState(Point pt)
+    {
+      var drawingVisual = GetVisual(pt);
+      if (drawingVisual != null && drawingVisual != gridVisual)
+      {
+        Cursor = Cursors.Hand;
+      }
+      else
+      {
+        Cursor = Cursors.Arrow;
+      }
+    }
+
+    private void AddDraggingVisual(DrawingVisual visual)
+    {
+      selectedVisual = new DrawingVisual();
+      using (DrawingContext dc = selectedVisual.RenderOpen())
+      {
+        dc.DrawDrawing(visual.Drawing);
+      }
+      selectedVisual.Opacity = 0.3;
+      AddVisual(selectedVisual);
+    }
+
+    private DrawingVisual GetVisual(Point pt)
+    {
+      HitTestResult hitResult = VisualTreeHelper.HitTest(this, pt);
+      return hitResult.VisualHit as DrawingVisual;
+    }
+
+    private GridPoint GetPrimitivePair(DrawingVisual visual)
+    {
+      return new GridPoint(0,0);
     }
 
     #endregion

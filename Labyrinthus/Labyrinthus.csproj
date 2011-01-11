@@ -99,6 +99,7 @@
   <ItemGroup>
     <Compile Include="AidedCanvas\PrimitiveEdgeControl.cs" />
     <Compile Include="AidedCanvas\PrimitivePackCanvas.cs" />
+    <Compile Include="Objects\GridPoint.cs" />
     <Compile Include="DebugInfoCameraConverter.cs" />
     <Compile Include="Objects\LineInfo.cs" />
     <Compile Include="Objects\PrimitiveInfo.cs" />

@@ -1,5 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using System.Collections.Generic;
+using System.Windows.Controls;
 using System.Windows.Input;
+using Labyrinthus.Objects;
 
 namespace Labyrinthus.Pages
 {
@@ -8,6 +10,12 @@ namespace Labyrinthus.Pages
   /// </summary>
   public partial class PagePackPrimitives : Page
   {
+    #region Поля
+
+    private List<PrimitiveInfo> primitivesPack = new List<PrimitiveInfo>();
+
+    #endregion
+
     public PagePackPrimitives()
     {
       InitializeComponent();
