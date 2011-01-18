@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Labyrinthus.Objects;
+using System.Windows.Controls;
 
 namespace Labyrinthus.Pages
 {
@@ -17,11 +18,7 @@ namespace Labyrinthus.Pages
     #endregion
 
     #region Поля
-    /// <summary>
-    /// Материал для пола
-    /// </summary>
-    private readonly DiffuseMaterial floorMaterial;
-
+    
     /// <summary>
     /// Материал для стен лабиринта
     /// </summary>
@@ -53,21 +50,13 @@ namespace Labyrinthus.Pages
     /// Высота стен лабиринта
     /// </summary>
     public int EdgeHeight { get; set; }
-
-    /// <summary>
-    /// Кисть для пола
-    /// </summary>
-    public SolidColorBrush FloorBrush { get; set; }
-
+    
     /// <summary>
     /// Кисть для стен лабиринта
     /// </summary>
     public SolidColorBrush PrimitiveEdgeBrush { get; set; }
 
-    /// <summary>
-    /// Камера
-    /// </summary>
-    public PerspectiveCamera Camera { get; private set; }
+    public SolidColorBrush FloorBrush { get; set; }
     #endregion
 
     #region Конструктор
@@ -78,15 +67,12 @@ namespace Labyrinthus.Pages
       LabyrinthusSize = 4;
       EdgeWidth = 1;
       EdgeHeight = 4;
-      FloorBrush = new SolidColorBrush(Colors.Red);
+      
       PrimitiveEdgeBrush = new SolidColorBrush(Colors.Gray);
-
-      floorMaterial = new DiffuseMaterial(FloorBrush);
       primitiveEdgeMaterial = new DiffuseMaterial(PrimitiveEdgeBrush);
+      FloorBrush = new SolidColorBrush(Colors.Red);
 
       debugMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Green));
-
-      InitCamera();
 
       DataContext = this;
     }
@@ -98,18 +84,10 @@ namespace Labyrinthus.Pages
       DrawLabyrinthus();
     }
 
-
     private void LabyrinthusParams_Changed(object sender, RoutedEventArgs e)
     {
       DrawLabyrinthus();
     }
-
-
-    private void ColorPicker_SelectedColorChanged(object sender, RoutedEventArgs e)
-    {
-      LabyrinthusViewport.Focus();
-    }
-
 
     private void LabyrinthusGrid_KeyDown(object sender, KeyEventArgs e)
     {
@@ -170,6 +148,7 @@ namespace Labyrinthus.Pages
     }
 
 
+
     private void labyrinthusGrid_MouseMove(object sender, MouseEventArgs e)
     {
       if (e.LeftButton != MouseButtonState.Pressed)
@@ -216,69 +195,81 @@ namespace Labyrinthus.Pages
     #endregion
 
     #region private методы
+
+
+    public Model3DGroup Maze
+    {
+        get { return (Model3DGroup)GetValue(MazeProperty); }
+        set { SetValue(MazeProperty, value); }
+    }
+    public static readonly DependencyProperty MazeProperty =
+        DependencyProperty.Register("Maze", typeof(Model3DGroup), typeof(PageShow3DLabyrinthus), new UIPropertyMetadata(null));
+
+    public GeometryModel3D Floor
+    {
+        get { return (GeometryModel3D)GetValue(FloorProperty); }
+        set { SetValue(FloorProperty, value); }
+    }
+    public static readonly DependencyProperty FloorProperty =
+        DependencyProperty.Register("Floor", typeof(GeometryModel3D), typeof(PageShow3DLabyrinthus), new UIPropertyMetadata(null));
+
+    public Vector3D LightDirection
+    {
+        get { return (Vector3D)GetValue(LightDirectionProperty); }
+        set { SetValue(LightDirectionProperty, value); }
+    }
+    public static readonly DependencyProperty LightDirectionProperty =
+        DependencyProperty.Register("LightDirection", typeof(Vector3D), typeof(PageShow3DLabyrinthus), new UIPropertyMetadata(new Vector3D(2, 3, -7)));
+
     private void DrawLabyrinthus()
     {
-      LabyrinthusViewport.Children.Clear();
+        var labyrinthusModelGroup = new Model3DGroup();
 
-      var labyrinthusModelVisual = new ModelVisual3D();
-      var labyrinthusModelGroup = new Model3DGroup();
-      var labyrinthusGeometryModel = new GeometryModel3D();
-
-      AddLight(labyrinthusModelGroup);
-      DrawFloor(labyrinthusModelGroup);
-
-      for (int x = -LabyrinthusSize; x < LabyrinthusSize; x++)
-      {
-        for (int y = -LabyrinthusSize; y < LabyrinthusSize; y++)
+        for (int x = -LabyrinthusSize; x < LabyrinthusSize; x++)
         {
-          DrawPrimitive(labyrinthusModelGroup, x, y);
+            for (int y = -LabyrinthusSize; y < LabyrinthusSize; y++)
+            {
+                DrawPrimitive(labyrinthusModelGroup, x, y);
+            }
         }
-      }
 
-      labyrinthusModelGroup.Children.Add(labyrinthusGeometryModel);
-      labyrinthusModelVisual.Content = labyrinthusModelGroup;
-      LabyrinthusViewport.Children.Add(labyrinthusModelVisual);
+        var wnd = (WindowMaster)Application.Current.MainWindow;
+        var xSize = wnd.Primitive.Width * ZOOM * LabyrinthusSize * 2;
+        var ySize = wnd.Primitive.Height * ZOOM * LabyrinthusSize * 2;
+        var viewport3d = new Viewport3D
+        {
+            Opacity = 0.8,
+            Camera = new OrthographicCamera
+            {
+                Position = new Point3D(LightDirection.X * -10, LightDirection.Y * -10, LightDirection.Z * -10),
+                LookDirection = LightDirection,
+                Width = xSize,
+                UpDirection = new Vector3D(0, 0, -1)
+            }
+        };
+        viewport3d.Children.Add(new ModelVisual3D { Content = labyrinthusModelGroup });
 
-      LabyrinthusViewport.Focus();
+        var shadow = new Border
+        {
+            Width = 400,
+            Height = 400,
+            Background = new SolidColorBrush(Colors.Transparent),
+            Child = viewport3d
+        };
+
+        Maze = labyrinthusModelGroup;
+        Floor = GetFloor(shadow);
     }
 
-
-    private void InitCamera()
-    {
-      Camera = new PerspectiveCamera
-      {
-        Position = new Point3D(-17, -20, 19),
-        LookDirection = new Vector3D(1, 1.2, -1),
-        UpDirection = new Vector3D(0, 0, 1)
-      };
-
-      LabyrinthusViewport.Camera = Camera;
-    }
-
-
-    private static void AddLight(Model3DGroup labyrinthusModelGroup)
-    {
-      var labyrinthusLight = new DirectionalLight
-      {
-        Color = Colors.White,
-        Direction = new Vector3D(2, 5, -3)
-      };
-
-      labyrinthusModelGroup.Children.Add(labyrinthusLight);
-    }
-
-
-    private void DrawFloor(Model3DGroup labyrinthusModelGroup)
+    private GeometryModel3D GetFloor(Border shadow)
     {
       var wnd = (WindowMaster)Application.Current.MainWindow;
-      var xSize = wnd.Primitive.Width * ZOOM * LabyrinthusSize * 10;
-      var ySize = wnd.Primitive.Height * ZOOM * LabyrinthusSize * 10;
+      var xSize = wnd.Primitive.Width * ZOOM * LabyrinthusSize * 2;
+      var ySize = wnd.Primitive.Height * ZOOM * LabyrinthusSize * 2;
 
       var floorPositions = new Point3DCollection
       {
         new Point3D(-xSize, -ySize, 0),
-        new Point3D( xSize, -ySize, 0),
-        new Point3D(-xSize,  ySize, 0),
         new Point3D( xSize, -ySize, 0),
         new Point3D(-xSize,  ySize, 0),
         new Point3D( xSize,  ySize, 0),
@@ -287,21 +278,39 @@ namespace Labyrinthus.Pages
       var floorIndices = new Int32Collection
       {
         0,1,2,
-        3,5,4
+        1,3,2
       };
+      var pointCollection = new PointCollection
+        {
+            new Point(0,1),
+            new Point(1,1),
+            new Point(0,0),
+            new Point(1,0),
+        };
 
       var floorGeometry = new MeshGeometry3D
       {
         Positions = floorPositions,
-        TriangleIndices = floorIndices
+        TriangleIndices = floorIndices,
+        TextureCoordinates = pointCollection
       };
+      var shadowBrush = new VisualBrush(shadow);
+      var angle = 180 + Math.Atan(LightDirection.X / LightDirection.Y) * 180 / 3.14;
+        var groupTransform = new TransformGroup();
+        groupTransform.Children.Add(new ScaleTransform(0.5, 0.5, 0.5, 0.5));// should be math
+        groupTransform.Children.Add(new RotateTransform(angle, 0.5, 0.5)); // should be math
+        groupTransform.Children.Add(new TranslateTransform(-0.002, 0.002)); // should be math
+        shadowBrush.RelativeTransform = groupTransform;
+      var material = new MaterialGroup();
+      material.Children.Add(new DiffuseMaterial { Brush = FloorBrush });
+      material.Children.Add(new DiffuseMaterial { Brush = shadowBrush });
       var floorGeometryModel = new GeometryModel3D
        {
          Geometry = floorGeometry,
-         Material = floorMaterial
+         Material = material
        };
 
-      labyrinthusModelGroup.Children.Add(floorGeometryModel);
+      return floorGeometryModel;
     }
 
 
